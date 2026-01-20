@@ -1,14 +1,14 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import SchoolHome from './components/SchoolHome';
-import SchoolAbout from './components/SchoolAbout';
-import SchoolContact from './components/SchoolContact';
-import SchoolEventsNews from './components/SchoolEventsNews';
-import SchoolLogin from './components/SchoolLogin';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SchoolHome from './componets/SchoolHome';
+import SchoolAbout from './componets/SchoolAbout';
+import SchoolContact from './componets/SchoolContact';
+import SchoolEventsNews from './componets/SchoolEventsNews';
+import SchoolLogin from './componets/SchoolLogin';
 
 function App() {
   return (
-    <div className="App">
+    <div>
       <Router>
         <Routes>
           <Route path="/" element={<SchoolHome />} />

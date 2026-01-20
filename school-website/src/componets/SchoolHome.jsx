@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { useRecipeStore } from './recipeStore';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
 function SchoolHome() {
   return (
@@ -8,10 +6,10 @@ function SchoolHome() {
       <h1>Welcome to Our School</h1>
       <p>This is the home page of our school website.</p>
       <ul>
-        <ol><a href="About">About Us</a></ol>
-        <ol><a href="Contact">Contact Us</a></ol>
-        <ol><a href="News">News & Events</a></ol>
-        <ol><a href="Login">Login / Signup</a></ol>
+        <li><a href="About">About Us</a></li>
+        <li><a href="Contact">Contact Us</a></li>
+        <li><a href="News">News & Events</a></li>
+        <li><a href="Login">Login / Signup</a></li>
       </ul>
     </div>
   );
