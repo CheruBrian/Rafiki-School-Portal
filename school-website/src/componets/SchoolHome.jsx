@@ -17,6 +17,7 @@ function SchoolHome() {
     </div>
     <div className="school-body">
       <h2>Our Mission</h2>
+      <h2>Upcoming News</h2>
     </div>
     <div className="class-footer">
         <p>&copy; 2026 Our School all rights reserved</p>
