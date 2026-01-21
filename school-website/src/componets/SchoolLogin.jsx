@@ -11,6 +11,7 @@ function SchoolLogin() {
             <input type="username" placeholder=" " id="username" name="username" minLength={4} maxLength={15} required />
             <label for="password">password</label>
             <input type="password" placeholder=" " id="password" name="password" minLength={8} maxLength={15} required />
+            <button type="submit">Login</button>
             </form>
         </div>
     )
