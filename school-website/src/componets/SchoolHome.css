@@ -50,6 +50,7 @@ nav {
     margin-top: auto;
     background-color: aquamarine;
 }
+
 footer {
     background-color: aquamarine;
     text-align: center;
@@ -60,5 +61,6 @@ footer {
     position: relative;
     bottom: 0;
     font-size: 14px;
+    justify-items: baseline;
 
 }
