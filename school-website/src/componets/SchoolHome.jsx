@@ -29,15 +29,13 @@ function SchoolHome() {
         <h2>Contact Us</h2>
       <p>For any inquiries, please contact us through the form below:</p>
             <form name="contact-us-form">
-                <label>
                     Name:
-                    <input type="name" placeholder=" " minLength={3} maxLength={13}></input>
+                    <input type="name" placeholder=" " minLength={3} maxLength={13} required></input>
                     Email:
-                    <input type="email" placeholder=" " minLength={4} maxLength={40}></input>
+                    <input type="email" placeholder=" " minLength={4} maxLength={40} required></input>
                     Phone number:
-                    <input type="tel" placeholder=" " minLength={9} maxLength={20}></input>
+                    <input type="tel" placeholder=" " minLength={9} maxLength={20} required></input>
                     <button type="Submit"></button>
-                </label>
             </form>
 
       </div>
