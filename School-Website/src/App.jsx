@@ -1,13 +1,12 @@
-
+import React from "react";
+import Schoolhome from "./componets/Schoolhome.jsx";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <h1>School Website</h1>
+      <Schoolhome />
     </>
   )
 }
 
-export default App
+export default App;
