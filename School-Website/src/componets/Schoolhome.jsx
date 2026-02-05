@@ -1,5 +1,6 @@
 import React from "react";
 import "./Schoolhome.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function Schoolhome() {
     return (
