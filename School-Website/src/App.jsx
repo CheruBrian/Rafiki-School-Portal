@@ -5,12 +5,11 @@ import { BrowserRouter, Route } from "react-router-dom";
 function App() {
   return (
     <>
-    <Routes>
-      <Route path="/" element={<Schoolhome />} />
-      <Route path="/about" element={<div>About Page</div>} />
-      <Route path="/contact" element={<div>Contact Page</div>} />
-      <Route path="*" element={<div>404 Not Found</div>} /> 
-    </Routes>
+    <h1>Welcome to School Website</h1>
+    <h2>School Information</h2>
+    <BrowserRouter>
+      <Route path="/" component={Schoolhome} />
+    </BrowserRouter>
     </>
   )
 }

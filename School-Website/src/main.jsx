@@ -6,6 +6,8 @@ import { BrowserRouter, createBrowserRouter, Routes } from 'react-router-dom';
 import './index.css'
 import App from './App.jsx'
 import Schoolhome from './componets/Schoolhome.jsx';
+import SchoolContact from './componets/SchoolContact.jsx';
+
 
 window.Buffer = Buffer;
 window.URL = URL;
@@ -32,7 +34,7 @@ createBrowserRouter([
   { path: '/', element: <App /> },
   { path: '/schoolhome', element: <Schoolhome /> },
   { path: '/about', element: <div>About Page</div> },
-  { path: '/contact', element: <div>Contact Page</div> },
+  { path: '/contact', element: <SchoolContact /> },
   { path: '*', element: <div>404 Not Found</div> },
 ]);
 
