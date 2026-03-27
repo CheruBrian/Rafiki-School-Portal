@@ -17,4 +17,4 @@ function SchoolContact() {
     );
 }
 
-export default SchoolConact;
+export default SchoolContact;

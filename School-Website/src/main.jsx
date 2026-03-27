@@ -33,7 +33,7 @@ BrowserRouter.prototype.createHref = function (location) {
 createBrowserRouter([
   { path: '/', element: <App /> },
   { path: '/schoolhome', element: <Schoolhome /> },
-  { path: '/about', element: <div>About Page</div> },
+  { path: '/about', element: <SchoolAbout /> },
   { path: '/contact', element: <SchoolContact /> },
   { path: '*', element: <div>404 Not Found</div> },
 ]);
