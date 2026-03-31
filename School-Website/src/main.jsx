@@ -6,6 +6,7 @@ import { BrowserRouter, createBrowserRouter, Routes } from 'react-router-dom';
 import './index.css'
 import App from './App.jsx'
 import Schoolhome from './componets/Schoolhome.jsx';
+import SchoolAbout from './componets/SchoolAbout.jsx';
 import SchoolContact from './componets/SchoolContact.jsx';
 
 
@@ -21,7 +22,7 @@ BrowserRouter.prototype.createHref = function (location) {
   return location.pathname + location.search + location.hash;
 };
 
-url = new URL('http://localhost');
+const url = new URL('http://localhost');
 url.pathname = '/';
 url.search = '';
 url.hash = '';
