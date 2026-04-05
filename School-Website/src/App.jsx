@@ -1,18 +1,74 @@
 import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./componets/ProtectedRoute";
+
+// Pages
+import Login from "./componets/Login.jsx";
 import Schoolhome from "./componets/Schoolhome.jsx";
 import SchoolAbout from "./componets/SchoolAbout.jsx";
 import SchoolContact from "./componets/SchoolContact.jsx";
-import { BrowserRouter, Route } from "react-router-dom";
+import AdminDashboard from "./componets/AdminDashboard.jsx";
+import AccountantDashboard from "./componets/AccountantDashboard.jsx";
+import TeacherDashboard from "./componets/TeacherDashboard.jsx";
+import ParentDashboard from "./componets/ParentDashboard.jsx";
+import Unauthorized from "./componets/Unauthorized.jsx";
 
 function App() {
   return (
-    <>
-    <BrowserRouter>
-      <Route path="/" component={Schoolhome} />
-      <Route path="/about" component={SchoolAbout} />
-      <Route path="/contact" component={SchoolContact} />
-    </BrowserRouter>
-    </>
+    <AuthProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Schoolhome />} />
+        <Route path="/about" element={<SchoolAbout />} />
+        <Route path="/contact" element={<SchoolContact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected Routes - Admin Only */}
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Routes - Accountant Only */}
+        <Route 
+          path="/accountant-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="accountant">
+              <AccountantDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Routes - Teacher Only */}
+        <Route 
+          path="/teacher-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Routes - Parent Only */}
+        <Route 
+          path="/parent-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="parent">
+              <ParentDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 

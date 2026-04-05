@@ -1,11 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Schoolhome from "./Schoolhome.jsx";
-import SchoolContact from "./SchoolContact.jsx";
-import SchoolAbout from "./SchoolAbout.jsx";
 
-
-function Schoolabout() {
+function SchoolAbout() {
   return (
     <div>
         <h1>About Us</h1>
