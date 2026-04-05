@@ -1,11 +1,19 @@
 import React from "react";
 import "./Schoolhome.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 function Schoolhome() {
+    const navigate = useNavigate();
+    
     return (
         <div>
-            <h1>Welcome to Our School</h1>
+            <div className="header-top">
+                <h1>Welcome to Our School</h1>
+                <div className="auth-buttons">
+                    <button className="btn-login" onClick={() => navigate('/login')}>Login</button>
+                    <button className="btn-signup" onClick={() => navigate('/login')}>Sign Up</button>
+                </div>
+            </div>
             <p>This is where you can learn and grow.</p>
             <ul>
                 <li><a href="/about">About Us</a></li>

@@ -14,6 +14,44 @@ body {
     font-size: 24px;
     font-weight: bold;
 }
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: antiquewhite;
+    border-bottom: 2px solid #333;
+}
+.header-top h1 {
+    margin: 0;
+    font-size: 28px;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.btn-login, .btn-signup {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-login {
+    background-color: #007bff;
+    color: white;
+}
+.btn-login:hover {
+    background-color: #0056b3;
+}
+.btn-signup {
+    background-color: #28a745;
+    color: white;
+}
+.btn-signup:hover {
+    background-color: #218838;
+}
 .body {
     padding: 20px;
     font-size: 20px;
