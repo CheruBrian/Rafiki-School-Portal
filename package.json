@@ -1,5 +1,14 @@
 {
-  "dependencies": {
-    "react-router-dom": "^7.13.0"
+  "name": "school-fe-project",
+  "private": true,
+  "workspaces": [
+    "School-Website"
+  ],
+  "scripts": {
+    "dev": "npm --workspace=School-Website run dev",
+    "build": "npm --workspace=School-Website run build",
+    "serve": "npm --workspace=School-Website run serve",
+    "preview": "npm --workspace=School-Website run preview",
+    "lint": "npm --workspace=School-Website run lint"
   }
 }
