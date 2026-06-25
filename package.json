@@ -8,6 +8,7 @@
     "dev": "npm --workspace=School-Website run dev",
     "build": "npm --workspace=School-Website run build",
     "serve": "npm --workspace=School-Website run serve",
+    "server": "npm --workspace=School-Website run serve",
     "preview": "npm --workspace=School-Website run preview",
     "lint": "npm --workspace=School-Website run lint"
   }

@@ -7,6 +7,7 @@ The School Website has been upgraded with a comprehensive role-based access cont
 ## Features Implemented
 
 ### 1. **Authentication System**
+
 - Custom authentication context using React Context API
 - Secure login mechanism with role-based access
 - User session management with login/logout functionality
@@ -14,6 +15,7 @@ The School Website has been upgraded with a comprehensive role-based access cont
 ### 2. **User Roles & Permissions**
 
 #### **Administrator (All Rights)**
+
 - View all students with complete details
 - Manage teacher information
 - Oversee accountant staff
@@ -21,10 +23,12 @@ The School Website has been upgraded with a comprehensive role-based access cont
 - View and analyze all school data
 
 **Demo Credentials:**
+
 - User Type: Administrator
 - Password: admin123
 
 #### **Accountant (Fee Management)**
+
 - View all students' classes
 - Track school fee collection
 - Monitor outstanding balances
@@ -32,10 +36,12 @@ The School Website has been upgraded with a comprehensive role-based access cont
 - Generate fee status reports
 
 **Demo Credentials:**
+
 - User Type: Accountant
 - Password: accountant123
 
 #### **Teachers (Student Management)**
+
 - View assigned students and their grades
 - Access student performance metrics
 - Monitor school fee status for their students
@@ -43,10 +49,12 @@ The School Website has been upgraded with a comprehensive role-based access cont
 - Track fee collection by class
 
 **Demo Credentials:**
+
 - User Type: Teacher
 - Password: teacher123
 
 #### **Parents (Student Monitoring)**
+
 - View children's academic performance
 - Access grades in all subjects
 - Monitor school fee balance
@@ -54,6 +62,7 @@ The School Website has been upgraded with a comprehensive role-based access cont
 - Track multiple children (if applicable)
 
 **Demo Credentials:**
+
 - User Type: Parent
 - Password: parent123
 
@@ -63,7 +72,7 @@ The School Website has been upgraded with a comprehensive role-based access cont
 src/
 ├── context/
 │   └── AuthContext.jsx           # Authentication context and login logic
-├── componets/
+├── components/
 │   ├── Login.jsx                 # Login page for all users
 │   ├── Login.css                 # Login page styling
 │   ├── AdminDashboard.jsx        # Administrator dashboard
@@ -82,12 +91,15 @@ src/
 ## How to Use
 
 ### Installation
+
 1. Install the required dependencies:
+
 ```bash
 npm install
 ```
 
 ### Running the Application
+
 ```bash
 npm run dev
 ```
@@ -105,33 +117,36 @@ The application will start on `http://localhost:5173` (or another available port
 
 ### Available Routes
 
-| Route | Access | Description |
-|-------|--------|-------------|
-| `/` | Public | Home page |
-| `/about` | Public | About page |
-| `/contact` | Public | Contact page |
-| `/login` | Public | Login page |
-| `/admin-dashboard` | Admin Only | Administrator dashboard with all features |
+| Route                   | Access          | Description                                 |
+| ----------------------- | --------------- | ------------------------------------------- |
+| `/`                     | Public          | Home page                                   |
+| `/about`                | Public          | About page                                  |
+| `/contact`              | Public          | Contact page                                |
+| `/login`                | Public          | Login page                                  |
+| `/admin-dashboard`      | Admin Only      | Administrator dashboard with all features   |
 | `/accountant-dashboard` | Accountant Only | Fee collection and student balance tracking |
-| `/teacher-dashboard` | Teacher Only | Student grades and fee status |
-| `/parent-dashboard` | Parent Only | Child performance and fee status |
-| `/unauthorized` | All Users | Access denied page |
+| `/teacher-dashboard`    | Teacher Only    | Student grades and fee status               |
+| `/parent-dashboard`     | Parent Only     | Child performance and fee status            |
+| `/unauthorized`         | All Users       | Access denied page                          |
 
 ## Mock Data
 
 The application currently uses **mock data** for demonstration purposes. The following data is available:
 
 ### Students Data
+
 - Student names, classes, and marks
 - School fee amounts (KES 5000)
 - Fee payment information
 - Grade assessments
 
 ### Teachers Data
+
 - Teacher names and subjects
 - Class assignments
 
 ### Accountants Data
+
 - Accountant staff information
 - Status tracking
 
@@ -190,14 +205,17 @@ Currently, the application uses demo credentials. To implement actual user manag
 ## Troubleshooting
 
 ### Issue: "Access Denied" message
+
 - Ensure you're logged in with the correct role
 - Check that your credentials match the role requirements
 
 ### Issue: Blank Dashboard
+
 - Clear browser cache and reload
 - Ensure JavaScript is enabled
 
 ### Issue: Routes not working
+
 - Verify that `react-router-dom` is installed
 - Check that BrowserRouter is properly set up in main.jsx
 
