@@ -1,43 +1,90 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
-import './Dashboard.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import "./Dashboard.css";
 
 const AdminDashboard = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedTeacherCategory, setSelectedTeacherCategory] = useState("All");
+  const [selectedStudentCategory, setSelectedStudentCategory] = useState("All");
   const [entityForm, setEntityForm] = useState({
-    name: '',
-    subject: '',
-    class: 'A1',
-    fee: '5000',
-    paid: '0',
-    status: 'Active',
-    role: 'Finance Officer'
+    name: "",
+    subject: "",
+    class: "A1",
+    fee: "5000",
+    paid: "0",
+    status: "Active",
+    role: "Finance Officer",
+    category: "Preschool",
   });
 
+  const gradeLevels = ["Preschool", "Lower Primary", "JSS", "SSS"];
+
   const initialStudents = [
-    { id: 1, name: 'John Doe', class: 'A1', fee: 5000, paid: 3000, balance: 2000 },
-    { id: 2, name: 'Jane Smith', class: 'B2', fee: 5000, paid: 5000, balance: 0 },
-    { id: 3, name: 'Mike Johnson', class: 'A1', fee: 5000, paid: 2000, balance: 3000 }
+    {
+      id: 1,
+      name: "John Doe",
+      class: "A1",
+      category: "Preschool",
+      fee: 5000,
+      paid: 3000,
+      balance: 2000,
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      class: "B2",
+      category: "Lower Primary",
+      fee: 5000,
+      paid: 5000,
+      balance: 0,
+    },
+    {
+      id: 3,
+      name: "Mike Johnson",
+      class: "A1",
+      category: "JSS",
+      fee: 5000,
+      paid: 2000,
+      balance: 3000,
+    },
   ];
 
   const initialTeachers = [
-    { id: 1, name: 'Mrs. Emma Wilson', subject: 'Mathematics', class: 'A1' },
-    { id: 2, name: 'Mr. Robert Brown', subject: 'English', class: 'B2' },
-    { id: 3, name: 'Mrs. Sarah Davis', subject: 'Science', class: 'A1' }
+    {
+      id: 1,
+      name: "Mrs. Emma Wilson",
+      subject: "Mathematics",
+      class: "A1",
+      category: "Preschool",
+    },
+    {
+      id: 2,
+      name: "Mr. Robert Brown",
+      subject: "English",
+      class: "B2",
+      category: "Lower Primary",
+    },
+    {
+      id: 3,
+      name: "Mrs. Sarah Davis",
+      subject: "Science",
+      class: "A1",
+      category: "JSS",
+    },
   ];
 
   const initialAccountants = [
-    { id: 1, name: 'Mr. Alex Thompson', status: 'Active' },
-    { id: 2, name: 'Ms. Lisa Anderson', status: 'Active' }
+    { id: 1, name: "Mr. Alex Thompson", status: "Active" },
+    { id: 2, name: "Ms. Lisa Anderson", status: "Active" },
   ];
 
   const initialFinanceTeam = [
-    { id: 1, name: 'Ms. Grace Mwangi', role: 'Finance Officer' },
-    { id: 2, name: 'Mr. Samuel Oduor', role: 'Finance Manager' }
+    { id: 1, name: "Ms. Grace Mwangi", role: "Finance Officer" },
+    { id: 2, name: "Mr. Samuel Oduor", role: "Finance Manager" },
   ];
 
   const [students, setStudents] = useState(initialStudents);
@@ -47,45 +94,55 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const resetEntityForm = () => {
     setEntityForm({
-      name: '',
-      subject: '',
-      class: 'A1',
-      fee: '5000',
-      paid: '0',
-      status: 'Active',
-      role: 'Finance Officer'
+      name: "",
+      subject: "",
+      class: "A1",
+      fee: "5000",
+      paid: "0",
+      status: "Active",
+      role: "Finance Officer",
+      category:
+        activeTab === "teachers"
+          ? selectedTeacherCategory === "All"
+            ? "Preschool"
+            : selectedTeacherCategory
+          : activeTab === "students"
+            ? selectedStudentCategory === "All"
+              ? "Preschool"
+              : selectedStudentCategory
+            : "Preschool",
     });
   };
 
   const getEntityLabel = () => {
     switch (activeTab) {
-      case 'students':
-        return 'Student';
-      case 'teachers':
-        return 'Teacher';
-      case 'accountants':
-        return 'Accountant';
-      case 'finances':
-        return 'Finance Staff';
+      case "students":
+        return "Student";
+      case "teachers":
+        return "Teacher";
+      case "accountants":
+        return "Accountant";
+      case "finances":
+        return "Finance Staff";
       default:
-        return 'Item';
+        return "Item";
     }
   };
 
   const getActiveEntityCount = () => {
     switch (activeTab) {
-      case 'students':
+      case "students":
         return students.length;
-      case 'teachers':
+      case "teachers":
         return teachers.length;
-      case 'accountants':
+      case "accountants":
         return accountants.length;
-      case 'finances':
+      case "finances":
         return financeTeam.length;
       default:
         return 0;
@@ -93,12 +150,25 @@ const AdminDashboard = () => {
   };
 
   const createNextId = (items) => {
-    return items.length ? Math.max(...items.map(item => item.id)) + 1 : 1;
+    return items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1;
   };
 
   const handleToggleAddForm = () => {
     if (showAddForm) {
       resetEntityForm();
+    } else {
+      const defaultCategory =
+        activeTab === "teachers"
+          ? selectedTeacherCategory === "All"
+            ? "Preschool"
+            : selectedTeacherCategory
+          : activeTab === "students"
+            ? selectedStudentCategory === "All"
+              ? "Preschool"
+              : selectedStudentCategory
+            : "Preschool";
+
+      setEntityForm((prev) => ({ ...prev, category: defaultCategory }));
     }
     setShowAddForm(!showAddForm);
   };
@@ -108,44 +178,46 @@ const AdminDashboard = () => {
     if (!entityForm.name.trim()) return;
 
     switch (activeTab) {
-      case 'students': {
+      case "students": {
         const fee = Number(entityForm.fee) || 0;
         const paid = Number(entityForm.paid) || 0;
         const newStudent = {
           id: createNextId(students),
           name: entityForm.name.trim(),
-          class: entityForm.class.trim() || 'A1',
+          class: entityForm.class.trim() || "A1",
+          category: entityForm.category || "Preschool",
           fee,
           paid,
-          balance: Math.max(fee - paid, 0)
+          balance: Math.max(fee - paid, 0),
         };
         setStudents([newStudent, ...students]);
         break;
       }
-      case 'teachers': {
+      case "teachers": {
         const newTeacher = {
           id: createNextId(teachers),
           name: entityForm.name.trim(),
-          subject: entityForm.subject.trim() || 'General Studies',
-          class: entityForm.class.trim() || 'A1'
+          subject: entityForm.subject.trim() || "General Studies",
+          class: entityForm.class.trim() || "A1",
+          category: entityForm.category || "Preschool",
         };
         setTeachers([newTeacher, ...teachers]);
         break;
       }
-      case 'accountants': {
+      case "accountants": {
         const newAccountant = {
           id: createNextId(accountants),
           name: entityForm.name.trim(),
-          status: entityForm.status
+          status: entityForm.status,
         };
         setAccountants([newAccountant, ...accountants]);
         break;
       }
-      case 'finances': {
+      case "finances": {
         const newFinance = {
           id: createNextId(financeTeam),
           name: entityForm.name.trim(),
-          role: entityForm.role
+          role: entityForm.role,
         };
         setFinanceTeam([newFinance, ...financeTeam]);
         break;
@@ -160,17 +232,19 @@ const AdminDashboard = () => {
 
   const handleRemoveEntity = (id) => {
     switch (activeTab) {
-      case 'students':
-        setStudents(students.filter(student => student.id !== id));
+      case "students":
+        setStudents(students.filter((student) => student.id !== id));
         break;
-      case 'teachers':
-        setTeachers(teachers.filter(teacher => teacher.id !== id));
+      case "teachers":
+        setTeachers(teachers.filter((teacher) => teacher.id !== id));
         break;
-      case 'accountants':
-        setAccountants(accountants.filter(accountant => accountant.id !== id));
+      case "accountants":
+        setAccountants(
+          accountants.filter((accountant) => accountant.id !== id),
+        );
         break;
-      case 'finances':
-        setFinanceTeam(financeTeam.filter(member => member.id !== id));
+      case "finances":
+        setFinanceTeam(financeTeam.filter((member) => member.id !== id));
         break;
       default:
         break;
@@ -189,13 +263,35 @@ const AdminDashboard = () => {
               id="entityName"
               className="input-field"
               value={entityForm.name}
-              onChange={(e) => setEntityForm({ ...entityForm, name: e.target.value })}
+              onChange={(e) =>
+                setEntityForm({ ...entityForm, name: e.target.value })
+              }
               placeholder={`Enter ${entityLabel.toLowerCase()} name`}
               required
             />
           </div>
 
-          {activeTab === 'teachers' && (
+          {(activeTab === "teachers" || activeTab === "students") && (
+            <div className="form-field">
+              <label htmlFor="entityCategory">Level</label>
+              <select
+                id="entityCategory"
+                className="select-field"
+                value={entityForm.category}
+                onChange={(e) =>
+                  setEntityForm({ ...entityForm, category: e.target.value })
+                }
+              >
+                {gradeLevels.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {activeTab === "teachers" && (
             <>
               <div className="form-field">
                 <label htmlFor="entitySubject">Subject</label>
@@ -203,7 +299,9 @@ const AdminDashboard = () => {
                   id="entitySubject"
                   className="input-field"
                   value={entityForm.subject}
-                  onChange={(e) => setEntityForm({ ...entityForm, subject: e.target.value })}
+                  onChange={(e) =>
+                    setEntityForm({ ...entityForm, subject: e.target.value })
+                  }
                   placeholder="Mathematics, English, Science..."
                 />
               </div>
@@ -213,14 +311,16 @@ const AdminDashboard = () => {
                   id="entityClass"
                   className="input-field"
                   value={entityForm.class}
-                  onChange={(e) => setEntityForm({ ...entityForm, class: e.target.value })}
+                  onChange={(e) =>
+                    setEntityForm({ ...entityForm, class: e.target.value })
+                  }
                   placeholder="A1, B2, C3"
                 />
               </div>
             </>
           )}
 
-          {activeTab === 'students' && (
+          {activeTab === "students" && (
             <>
               <div className="form-field">
                 <label htmlFor="entityClass">Class</label>
@@ -228,7 +328,9 @@ const AdminDashboard = () => {
                   id="entityClass"
                   className="input-field"
                   value={entityForm.class}
-                  onChange={(e) => setEntityForm({ ...entityForm, class: e.target.value })}
+                  onChange={(e) =>
+                    setEntityForm({ ...entityForm, class: e.target.value })
+                  }
                   placeholder="A1, B2, C3"
                 />
               </div>
@@ -239,7 +341,9 @@ const AdminDashboard = () => {
                   type="number"
                   className="input-field"
                   value={entityForm.fee}
-                  onChange={(e) => setEntityForm({ ...entityForm, fee: e.target.value })}
+                  onChange={(e) =>
+                    setEntityForm({ ...entityForm, fee: e.target.value })
+                  }
                   placeholder="5000"
                 />
               </div>
@@ -250,21 +354,25 @@ const AdminDashboard = () => {
                   type="number"
                   className="input-field"
                   value={entityForm.paid}
-                  onChange={(e) => setEntityForm({ ...entityForm, paid: e.target.value })}
+                  onChange={(e) =>
+                    setEntityForm({ ...entityForm, paid: e.target.value })
+                  }
                   placeholder="0"
                 />
               </div>
             </>
           )}
 
-          {activeTab === 'accountants' && (
+          {activeTab === "accountants" && (
             <div className="form-field">
               <label htmlFor="entityStatus">Status</label>
               <select
                 id="entityStatus"
                 className="select-field"
                 value={entityForm.status}
-                onChange={(e) => setEntityForm({ ...entityForm, status: e.target.value })}
+                onChange={(e) =>
+                  setEntityForm({ ...entityForm, status: e.target.value })
+                }
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -272,14 +380,16 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'finances' && (
+          {activeTab === "finances" && (
             <div className="form-field">
               <label htmlFor="entityRole">Finance Role</label>
               <select
                 id="entityRole"
                 className="select-field"
                 value={entityForm.role}
-                onChange={(e) => setEntityForm({ ...entityForm, role: e.target.value })}
+                onChange={(e) =>
+                  setEntityForm({ ...entityForm, role: e.target.value })
+                }
               >
                 <option value="Finance Officer">Finance Officer</option>
                 <option value="Finance Manager">Finance Manager</option>
@@ -299,6 +409,20 @@ const AdminDashboard = () => {
   const totalFees = students.reduce((sum, s) => sum + s.fee, 0);
   const totalPaid = students.reduce((sum, s) => sum + s.paid, 0);
   const totalBalance = students.reduce((sum, s) => sum + s.balance, 0);
+  const filteredTeachers =
+    selectedTeacherCategory === "All"
+      ? teachers
+      : teachers.filter(
+          (teacher) =>
+            (teacher.category || "Preschool") === selectedTeacherCategory,
+        );
+  const filteredStudents =
+    selectedStudentCategory === "All"
+      ? students
+      : students.filter(
+          (student) =>
+            (student.category || "Preschool") === selectedStudentCategory,
+        );
 
   return (
     <div className="dashboard-container">
@@ -306,45 +430,62 @@ const AdminDashboard = () => {
         <h1>School Administration Dashboard</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">Logout</button>
+          <button onClick={handleLogout} className="btn-logout">
+            Logout
+          </button>
         </div>
       </header>
 
       <nav className="dashboard-nav">
-        <button 
-          className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('overview'); setShowAddForm(false); }}
+        <button
+          className={`nav-btn ${activeTab === "overview" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("overview");
+            setShowAddForm(false);
+          }}
         >
           Overview
         </button>
-        <button 
-          className={`nav-btn ${activeTab === 'students' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('students'); setShowAddForm(false); }}
+        <button
+          className={`nav-btn ${activeTab === "students" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("students");
+            setShowAddForm(false);
+          }}
         >
           Students
         </button>
-        <button 
-          className={`nav-btn ${activeTab === 'teachers' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('teachers'); setShowAddForm(false); }}
+        <button
+          className={`nav-btn ${activeTab === "teachers" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("teachers");
+            setShowAddForm(false);
+          }}
         >
           Teachers
         </button>
-        <button 
-          className={`nav-btn ${activeTab === 'accountants' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('accountants'); setShowAddForm(false); }}
+        <button
+          className={`nav-btn ${activeTab === "accountants" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("accountants");
+            setShowAddForm(false);
+          }}
         >
           Accountants
         </button>
-        <button 
-          className={`nav-btn ${activeTab === 'finances' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('finances'); setShowAddForm(false); }}
+        <button
+          className={`nav-btn ${activeTab === "finances" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("finances");
+            setShowAddForm(false);
+          }}
         >
           Finances
         </button>
       </nav>
 
       <main className="dashboard-content">
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <div className="tab-content">
             <h2>Overview</h2>
             <div className="stats-grid">
@@ -362,7 +503,9 @@ const AdminDashboard = () => {
               </div>
               <div className="stat-card">
                 <h3>Outstanding Balance</h3>
-                <p className="stat-value">KES {totalBalance.toLocaleString()}</p>
+                <p className="stat-value">
+                  KES {totalBalance.toLocaleString()}
+                </p>
               </div>
               <div className="stat-card">
                 <h3>Total Teachers</h3>
@@ -376,26 +519,53 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'students' && (
+        {activeTab === "students" && (
           <div className="tab-content">
             <div className="tab-actions">
               <div>
                 <h2>Student Management</h2>
-                <p>{students.length} student(s) registered</p>
+                <p>{filteredStudents.length} student(s) in this section</p>
               </div>
-              <button className="action-btn primary" onClick={handleToggleAddForm}>
-                {showAddForm ? 'Cancel' : 'Add Student'}
+              <button
+                className="action-btn primary"
+                onClick={handleToggleAddForm}
+              >
+                {showAddForm ? "Cancel" : "Add Student"}
               </button>
             </div>
+            <div className="filter-section">
+              <h3>Filter by level</h3>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${selectedStudentCategory === "All" ? "active" : ""}`}
+                  onClick={() => setSelectedStudentCategory("All")}
+                >
+                  All
+                </button>
+                {gradeLevels.map((level) => (
+                  <button
+                    key={level}
+                    className={`filter-btn ${selectedStudentCategory === level ? "active" : ""}`}
+                    onClick={() => setSelectedStudentCategory(level)}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
             {showAddForm && renderAddForm()}
-            {students.length === 0 ? (
-              <p className="no-data">No students available. Use the Add Student button to begin.</p>
+            {filteredStudents.length === 0 ? (
+              <p className="no-data">
+                No students available for this level. Use the Add Student button
+                to begin.
+              </p>
             ) : (
               <table className="data-table entity-table">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Level</th>
                     <th>Class</th>
                     <th>School Fee</th>
                     <th>Paid</th>
@@ -404,18 +574,26 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map(student => (
+                  {filteredStudents.map((student) => (
                     <tr key={student.id}>
                       <td>{student.id}</td>
                       <td>{student.name}</td>
+                      <td>{student.category || "Preschool"}</td>
                       <td>{student.class}</td>
                       <td>KES {student.fee.toLocaleString()}</td>
                       <td>KES {student.paid.toLocaleString()}</td>
-                      <td className={student.balance > 0 ? 'balance-due' : 'balance-paid'}>
+                      <td
+                        className={
+                          student.balance > 0 ? "balance-due" : "balance-paid"
+                        }
+                      >
                         KES {student.balance.toLocaleString()}
                       </td>
                       <td>
-                        <button className="btn-remove" onClick={() => handleRemoveEntity(student.id)}>
+                        <button
+                          className="btn-remove"
+                          onClick={() => handleRemoveEntity(student.id)}
+                        >
                           Remove
                         </button>
                       </td>
@@ -427,20 +605,46 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'teachers' && (
+        {activeTab === "teachers" && (
           <div className="tab-content">
             <div className="tab-actions">
               <div>
                 <h2>Teacher Management</h2>
-                <p>{teachers.length} teacher(s) on record</p>
+                <p>{filteredTeachers.length} teacher(s) in this section</p>
               </div>
-              <button className="action-btn primary" onClick={handleToggleAddForm}>
-                {showAddForm ? 'Cancel' : 'Add Teacher'}
+              <button
+                className="action-btn primary"
+                onClick={handleToggleAddForm}
+              >
+                {showAddForm ? "Cancel" : "Add Teacher"}
               </button>
             </div>
+            <div className="filter-section">
+              <h3>Filter by level</h3>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${selectedTeacherCategory === "All" ? "active" : ""}`}
+                  onClick={() => setSelectedTeacherCategory("All")}
+                >
+                  All
+                </button>
+                {gradeLevels.map((level) => (
+                  <button
+                    key={level}
+                    className={`filter-btn ${selectedTeacherCategory === level ? "active" : ""}`}
+                    onClick={() => setSelectedTeacherCategory(level)}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
             {showAddForm && renderAddForm()}
-            {teachers.length === 0 ? (
-              <p className="no-data">No teachers available. Use the Add Teacher button to begin.</p>
+            {filteredTeachers.length === 0 ? (
+              <p className="no-data">
+                No teachers available for this level. Use the Add Teacher button
+                to begin.
+              </p>
             ) : (
               <table className="data-table entity-table">
                 <thead>
@@ -448,19 +652,24 @@ const AdminDashboard = () => {
                     <th>ID</th>
                     <th>Name</th>
                     <th>Subject</th>
+                    <th>Level</th>
                     <th>Class</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {teachers.map(teacher => (
+                  {filteredTeachers.map((teacher) => (
                     <tr key={teacher.id}>
                       <td>{teacher.id}</td>
                       <td>{teacher.name}</td>
                       <td>{teacher.subject}</td>
+                      <td>{teacher.category || "Preschool"}</td>
                       <td>{teacher.class}</td>
                       <td>
-                        <button className="btn-remove" onClick={() => handleRemoveEntity(teacher.id)}>
+                        <button
+                          className="btn-remove"
+                          onClick={() => handleRemoveEntity(teacher.id)}
+                        >
                           Remove
                         </button>
                       </td>
@@ -472,20 +681,26 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'accountants' && (
+        {activeTab === "accountants" && (
           <div className="tab-content">
             <div className="tab-actions">
               <div>
                 <h2>Accountant Management</h2>
                 <p>{accountants.length} accountant(s) available</p>
               </div>
-              <button className="action-btn primary" onClick={handleToggleAddForm}>
-                {showAddForm ? 'Cancel' : 'Add Accountant'}
+              <button
+                className="action-btn primary"
+                onClick={handleToggleAddForm}
+              >
+                {showAddForm ? "Cancel" : "Add Accountant"}
               </button>
             </div>
             {showAddForm && renderAddForm()}
             {accountants.length === 0 ? (
-              <p className="no-data">No accountants available. Use the Add Accountant button to begin.</p>
+              <p className="no-data">
+                No accountants available. Use the Add Accountant button to
+                begin.
+              </p>
             ) : (
               <table className="data-table entity-table">
                 <thead>
@@ -497,13 +712,20 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {accountants.map(accountant => (
+                  {accountants.map((accountant) => (
                     <tr key={accountant.id}>
                       <td>{accountant.id}</td>
                       <td>{accountant.name}</td>
-                      <td><span className="status-badge">{accountant.status}</span></td>
                       <td>
-                        <button className="btn-remove" onClick={() => handleRemoveEntity(accountant.id)}>
+                        <span className="status-badge">
+                          {accountant.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn-remove"
+                          onClick={() => handleRemoveEntity(accountant.id)}
+                        >
                           Remove
                         </button>
                       </td>
@@ -515,20 +737,26 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'finances' && (
+        {activeTab === "finances" && (
           <div className="tab-content">
             <div className="tab-actions">
               <div>
                 <h2>Finance Team Management</h2>
                 <p>{financeTeam.length} finance team member(s)</p>
               </div>
-              <button className="action-btn primary" onClick={handleToggleAddForm}>
-                {showAddForm ? 'Cancel' : 'Add Finance Staff'}
+              <button
+                className="action-btn primary"
+                onClick={handleToggleAddForm}
+              >
+                {showAddForm ? "Cancel" : "Add Finance Staff"}
               </button>
             </div>
             {showAddForm && renderAddForm()}
             {financeTeam.length === 0 ? (
-              <p className="no-data">No finance staff available. Use the Add Finance Staff button to begin.</p>
+              <p className="no-data">
+                No finance staff available. Use the Add Finance Staff button to
+                begin.
+              </p>
             ) : (
               <table className="data-table entity-table">
                 <thead>
@@ -540,13 +768,16 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {financeTeam.map(member => (
+                  {financeTeam.map((member) => (
                     <tr key={member.id}>
                       <td>{member.id}</td>
                       <td>{member.name}</td>
                       <td>{member.role}</td>
                       <td>
-                        <button className="btn-remove" onClick={() => handleRemoveEntity(member.id)}>
+                        <button
+                          className="btn-remove"
+                          onClick={() => handleRemoveEntity(member.id)}
+                        >
                           Remove
                         </button>
                       </td>
