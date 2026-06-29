@@ -1,37 +1,80 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
-import './Dashboard.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import "./Dashboard.css";
 
 const AccountantDashboard = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const [filterClass, setFilterClass] = useState('All');
+  const [filterCategory, setFilterCategory] = useState("All");
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   // Mock student data
   const students = [
-    { id: 1, name: 'John Doe', class: 'A1', fee: 5000, paid: 3000, balance: 2000 },
-    { id: 2, name: 'Jane Smith', class: 'B2', fee: 5000, paid: 5000, balance: 0 },
-    { id: 3, name: 'Mike Johnson', class: 'A1', fee: 5000, paid: 2000, balance: 3000 },
-    { id: 4, name: 'Sarah Williams', class: 'B2', fee: 5000, paid: 4000, balance: 1000 },
-    { id: 5, name: 'David Brown', class: 'A1', fee: 5000, paid: 1000, balance: 4000 },
+    {
+      id: 1,
+      name: "John Doe",
+      class: "A1",
+      category: "Preschool",
+      fee: 5000,
+      paid: 3000,
+      balance: 2000,
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      class: "B2",
+      category: "Lower Primary",
+      fee: 5000,
+      paid: 5000,
+      balance: 0,
+    },
+    {
+      id: 3,
+      name: "Mike Johnson",
+      class: "A1",
+      category: "JSS",
+      fee: 5000,
+      paid: 2000,
+      balance: 3000,
+    },
+    {
+      id: 4,
+      name: "Sarah Williams",
+      class: "B2",
+      category: "SSS",
+      fee: 5000,
+      paid: 4000,
+      balance: 1000,
+    },
+    {
+      id: 5,
+      name: "David Brown",
+      class: "A1",
+      category: "Preschool",
+      fee: 5000,
+      paid: 1000,
+      balance: 4000,
+    },
   ];
 
-  const classes = ['All', 'A1', 'B2'];
-  
-  const filteredStudents = filterClass === 'All' 
-    ? students 
-    : students.filter(s => s.class === filterClass);
+  const categories = ["All", "Preschool", "Lower Primary", "JSS", "SSS"];
+
+  const filteredStudents =
+    filterCategory === "All"
+      ? students
+      : students.filter((s) => (s.category || "Preschool") === filterCategory);
 
   const totalBalance = filteredStudents.reduce((sum, s) => sum + s.balance, 0);
   const totalFees = filteredStudents.reduce((sum, s) => sum + s.fee, 0);
   const totalPaid = filteredStudents.reduce((sum, s) => sum + s.paid, 0);
-  const studentsWithBalance = filteredStudents.filter(s => s.balance > 0).length;
+  const studentsWithBalance = filteredStudents.filter(
+    (s) => s.balance > 0,
+  ).length;
 
   return (
     <div className="dashboard-container">
@@ -39,7 +82,9 @@ const AccountantDashboard = () => {
         <h1>Accountant Dashboard</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">Logout</button>
+          <button onClick={handleLogout} className="btn-logout">
+            Logout
+          </button>
         </div>
       </header>
 
@@ -61,7 +106,9 @@ const AccountantDashboard = () => {
             </div>
             <div className="stat-card">
               <h3>Outstanding Balance</h3>
-              <p className="stat-value outstanding">KES {totalBalance.toLocaleString()}</p>
+              <p className="stat-value outstanding">
+                KES {totalBalance.toLocaleString()}
+              </p>
             </div>
             <div className="stat-card">
               <h3>Students with Balance</h3>
@@ -69,21 +116,24 @@ const AccountantDashboard = () => {
             </div>
             <div className="stat-card">
               <h3>Collection Rate</h3>
-              <p className="stat-value">{totalFees > 0 ? ((totalPaid / totalFees) * 100).toFixed(1) : 0}%</p>
+              <p className="stat-value">
+                {totalFees > 0 ? ((totalPaid / totalFees) * 100).toFixed(1) : 0}
+                %
+              </p>
             </div>
           </div>
         </div>
 
         <div className="filter-section">
-          <h3>Filter by Class:</h3>
+          <h3>Filter by Level:</h3>
           <div className="filter-buttons">
-            {classes.map(cls => (
+            {categories.map((category) => (
               <button
-                key={cls}
-                className={`filter-btn ${filterClass === cls ? 'active' : ''}`}
-                onClick={() => setFilterClass(cls)}
+                key={category}
+                className={`filter-btn ${filterCategory === category ? "active" : ""}`}
+                onClick={() => setFilterCategory(category)}
               >
-                {cls}
+                {category}
               </button>
             ))}
           </div>
@@ -96,6 +146,7 @@ const AccountantDashboard = () => {
               <tr>
                 <th>ID</th>
                 <th>Student Name</th>
+                <th>Level</th>
                 <th>Class</th>
                 <th>School Fee</th>
                 <th>Amount Paid</th>
@@ -104,19 +155,28 @@ const AccountantDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map(student => (
+              {filteredStudents.map((student) => (
                 <tr key={student.id}>
                   <td>{student.id}</td>
                   <td>{student.name}</td>
+                  <td>{student.category || "Preschool"}</td>
                   <td>{student.class}</td>
                   <td>KES {student.fee.toLocaleString()}</td>
-                  <td className="paid-amount">KES {student.paid.toLocaleString()}</td>
-                  <td className={student.balance > 0 ? 'balance-due' : 'balance-paid'}>
+                  <td className="paid-amount">
+                    KES {student.paid.toLocaleString()}
+                  </td>
+                  <td
+                    className={
+                      student.balance > 0 ? "balance-due" : "balance-paid"
+                    }
+                  >
                     KES {student.balance.toLocaleString()}
                   </td>
                   <td>
-                    <span className={`status-badge ${student.balance === 0 ? 'paid' : 'pending'}`}>
-                      {student.balance === 0 ? 'Paid' : 'Pending'}
+                    <span
+                      className={`status-badge ${student.balance === 0 ? "paid" : "pending"}`}
+                    >
+                      {student.balance === 0 ? "Paid" : "Pending"}
                     </span>
                   </td>
                 </tr>
@@ -128,7 +188,10 @@ const AccountantDashboard = () => {
         {studentsWithBalance > 0 && (
           <div className="warning-section">
             <h3>⚠️ Outstanding Fees Alert</h3>
-            <p>{studentsWithBalance} student(s) have outstanding school fees totaling KES {totalBalance.toLocaleString()}</p>
+            <p>
+              {studentsWithBalance} student(s) have outstanding school fees
+              totaling KES {totalBalance.toLocaleString()}
+            </p>
           </div>
         )}
       </main>

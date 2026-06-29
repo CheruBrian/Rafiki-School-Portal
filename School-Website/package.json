@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "vite",
+    "script": "npm run dev",
     "build": "vite build",
     "serve": "serve -s build",
     "server": "serve -s build",
