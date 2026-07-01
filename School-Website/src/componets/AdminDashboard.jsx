@@ -10,6 +10,8 @@ const AdminDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedTeacherCategory, setSelectedTeacherCategory] = useState("All");
   const [selectedStudentCategory, setSelectedStudentCategory] = useState("All");
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [selectedTeacherId, setSelectedTeacherId] = useState(null);
   const [entityForm, setEntityForm] = useState({
     name: "",
     subject: "",
@@ -32,6 +34,16 @@ const AdminDashboard = () => {
       fee: 5000,
       paid: 3000,
       balance: 2000,
+      subjects: [
+        { name: "Mathematics", score: 88 },
+        { name: "English", score: 84 },
+        { name: "Science", score: 90 },
+      ],
+      performance: {
+        averageScore: 87,
+        grade: "A",
+        remark: "Very strong progress this term.",
+      },
     },
     {
       id: 2,
@@ -41,6 +53,16 @@ const AdminDashboard = () => {
       fee: 5000,
       paid: 5000,
       balance: 0,
+      subjects: [
+        { name: "Reading", score: 92 },
+        { name: "Math", score: 89 },
+        { name: "Creative Arts", score: 95 },
+      ],
+      performance: {
+        averageScore: 92,
+        grade: "A",
+        remark: "Excellent performance across all subjects.",
+      },
     },
     {
       id: 3,
@@ -50,6 +72,16 @@ const AdminDashboard = () => {
       fee: 5000,
       paid: 2000,
       balance: 3000,
+      subjects: [
+        { name: "Computer Studies", score: 78 },
+        { name: "History", score: 81 },
+        { name: "Biology", score: 76 },
+      ],
+      performance: {
+        averageScore: 78,
+        grade: "B",
+        remark: "Steady improvement and good effort.",
+      },
     },
   ];
 
@@ -60,6 +92,13 @@ const AdminDashboard = () => {
       subject: "Mathematics",
       class: "A1",
       category: "Preschool",
+      teaches: ["Mathematics", "Early Literacy"],
+      performance: {
+        rating: 4.8,
+        averageClassScore: 88,
+        students: 24,
+        remark: "Excellent classroom engagement and results.",
+      },
     },
     {
       id: 2,
@@ -67,6 +106,13 @@ const AdminDashboard = () => {
       subject: "English",
       class: "B2",
       category: "Lower Primary",
+      teaches: ["English", "Social Studies"],
+      performance: {
+        rating: 4.6,
+        averageClassScore: 86,
+        students: 30,
+        remark: "Consistent and thoughtful teaching style.",
+      },
     },
     {
       id: 3,
@@ -74,6 +120,13 @@ const AdminDashboard = () => {
       subject: "Science",
       class: "A1",
       category: "JSS",
+      teaches: ["Science", "Chemistry"],
+      performance: {
+        rating: 4.7,
+        averageClassScore: 84,
+        students: 27,
+        remark: "Strong subject mastery and student support.",
+      },
     },
   ];
 
@@ -87,14 +140,52 @@ const AdminDashboard = () => {
     { id: 2, name: "Mr. Samuel Oduor", role: "Finance Manager" },
   ];
 
+  const initialDirectory = [
+    {
+      id: 101,
+      name: "Mrs. Emma Wilson",
+      role: "Teacher",
+      category: "Preschool",
+    },
+    {
+      id: 102,
+      name: "Mr. Alex Thompson",
+      role: "Accountant",
+      category: "Admin",
+    },
+    {
+      id: 103,
+      name: "Ms. Grace Mwangi",
+      role: "Finance Staff",
+      category: "Finance",
+    },
+  ];
+
   const [students, setStudents] = useState(initialStudents);
   const [teachers, setTeachers] = useState(initialTeachers);
   const [accountants, setAccountants] = useState(initialAccountants);
   const [financeTeam, setFinanceTeam] = useState(initialFinanceTeam);
+  const [directory, setDirectory] = useState(initialDirectory);
+  const [directorySearch, setDirectorySearch] = useState("");
+  const [directoryRoleFilter, setDirectoryRoleFilter] = useState("All");
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleStudentNameClick = (studentId) => {
+    setSelectedTeacherId(null);
+    setSelectedStudentId((currentId) =>
+      currentId === studentId ? null : studentId,
+    );
+  };
+
+  const handleTeacherNameClick = (teacherId) => {
+    setSelectedStudentId(null);
+    setSelectedTeacherId((currentId) =>
+      currentId === teacherId ? null : teacherId,
+    );
   };
 
   const resetEntityForm = () => {
@@ -153,6 +244,23 @@ const AdminDashboard = () => {
     return items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1;
   };
 
+  const addToDirectory = (name, role, category = "General") => {
+    const newEntry = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      name,
+      role,
+      category,
+    };
+
+    setDirectory((prev) => [newEntry, ...prev].slice(0, 8));
+  };
+
+  const removeFromDirectory = (name, role) => {
+    setDirectory((prev) =>
+      prev.filter((entry) => !(entry.name === name && entry.role === role)),
+    );
+  };
+
   const handleToggleAddForm = () => {
     if (showAddForm) {
       resetEntityForm();
@@ -191,6 +299,11 @@ const AdminDashboard = () => {
           balance: Math.max(fee - paid, 0),
         };
         setStudents([newStudent, ...students]);
+        addToDirectory(
+          entityForm.name.trim(),
+          "Student",
+          entityForm.category || "Preschool",
+        );
         break;
       }
       case "teachers": {
@@ -202,6 +315,11 @@ const AdminDashboard = () => {
           category: entityForm.category || "Preschool",
         };
         setTeachers([newTeacher, ...teachers]);
+        addToDirectory(
+          entityForm.name.trim(),
+          "Teacher",
+          entityForm.category || "Preschool",
+        );
         break;
       }
       case "accountants": {
@@ -211,6 +329,7 @@ const AdminDashboard = () => {
           status: entityForm.status,
         };
         setAccountants([newAccountant, ...accountants]);
+        addToDirectory(entityForm.name.trim(), "Accountant", "Admin");
         break;
       }
       case "finances": {
@@ -220,6 +339,7 @@ const AdminDashboard = () => {
           role: entityForm.role,
         };
         setFinanceTeam([newFinance, ...financeTeam]);
+        addToDirectory(entityForm.name.trim(), "Finance Staff", "Finance");
         break;
       }
       default:
@@ -232,20 +352,34 @@ const AdminDashboard = () => {
 
   const handleRemoveEntity = (id) => {
     switch (activeTab) {
-      case "students":
-        setStudents(students.filter((student) => student.id !== id));
+      case "students": {
+        const student = students.find((entry) => entry.id === id);
+        setStudents(students.filter((studentEntry) => studentEntry.id !== id));
+        if (student) removeFromDirectory(student.name, "Student");
         break;
-      case "teachers":
-        setTeachers(teachers.filter((teacher) => teacher.id !== id));
+      }
+      case "teachers": {
+        const teacher = teachers.find((entry) => entry.id === id);
+        setTeachers(teachers.filter((teacherEntry) => teacherEntry.id !== id));
+        if (teacher) removeFromDirectory(teacher.name, "Teacher");
         break;
-      case "accountants":
+      }
+      case "accountants": {
+        const accountant = accountants.find((entry) => entry.id === id);
         setAccountants(
-          accountants.filter((accountant) => accountant.id !== id),
+          accountants.filter((accountantEntry) => accountantEntry.id !== id),
         );
+        if (accountant) removeFromDirectory(accountant.name, "Accountant");
         break;
-      case "finances":
-        setFinanceTeam(financeTeam.filter((member) => member.id !== id));
+      }
+      case "finances": {
+        const member = financeTeam.find((entry) => entry.id === id);
+        setFinanceTeam(
+          financeTeam.filter((memberEntry) => memberEntry.id !== id),
+        );
+        if (member) removeFromDirectory(member.name, "Finance Staff");
         break;
+      }
       default:
         break;
     }
@@ -423,6 +557,28 @@ const AdminDashboard = () => {
           (student) =>
             (student.category || "Preschool") === selectedStudentCategory,
         );
+  const selectedStudent = students.find(
+    (student) => student.id === selectedStudentId,
+  );
+  const selectedTeacher = teachers.find(
+    (teacher) => teacher.id === selectedTeacherId,
+  );
+  const roleFilters = [
+    "All",
+    "Teacher",
+    "Accountant",
+    "Finance Staff",
+    "Student",
+  ];
+  const filteredDirectory = directory.filter((entry) => {
+    const matchesRole =
+      directoryRoleFilter === "All" || entry.role === directoryRoleFilter;
+    const matchesSearch = entry.name
+      .toLowerCase()
+      .includes(directorySearch.toLowerCase());
+
+    return matchesRole && matchesSearch;
+  });
 
   return (
     <div className="dashboard-container">
@@ -516,6 +672,46 @@ const AdminDashboard = () => {
                 <p className="stat-value">{accountants.length}</p>
               </div>
             </div>
+
+            <div className="directory-card">
+              <div className="directory-header">
+                <h3>Staff Directory</h3>
+                <p>Search and browse added staff members by role.</p>
+              </div>
+              <div className="directory-controls">
+                <input
+                  className="input-field"
+                  type="text"
+                  value={directorySearch}
+                  onChange={(e) => setDirectorySearch(e.target.value)}
+                  placeholder="Search by name"
+                />
+                <div className="filter-buttons">
+                  {roleFilters.map((role) => (
+                    <button
+                      key={role}
+                      className={`filter-btn ${directoryRoleFilter === role ? "active" : ""}`}
+                      onClick={() => setDirectoryRoleFilter(role)}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ul className="directory-list">
+                {filteredDirectory.map((entry) => (
+                  <li key={entry.id}>
+                    <span>{entry.name}</span>
+                    <small>
+                      {entry.role} • {entry.category}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+              {filteredDirectory.length === 0 && (
+                <p className="no-data">No matching staff found.</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -577,7 +773,14 @@ const AdminDashboard = () => {
                   {filteredStudents.map((student) => (
                     <tr key={student.id}>
                       <td>{student.id}</td>
-                      <td>{student.name}</td>
+                      <td>
+                        <button
+                          className="entity-name-link"
+                          onClick={() => handleStudentNameClick(student.id)}
+                        >
+                          {student.name}
+                        </button>
+                      </td>
                       <td>{student.category || "Preschool"}</td>
                       <td>{student.class}</td>
                       <td>KES {student.fee.toLocaleString()}</td>
@@ -601,6 +804,42 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {selectedStudent && (
+              <div className="detail-panel">
+                <div className="detail-panel-header">
+                  <h3>{selectedStudent.name}</h3>
+                  <span>
+                    {selectedStudent.category} • {selectedStudent.class}
+                  </span>
+                </div>
+                <div className="detail-grid">
+                  <div className="detail-card">
+                    <h4>Subjects</h4>
+                    <ul className="detail-list">
+                      {selectedStudent.subjects.map((subject) => (
+                        <li key={subject.name}>
+                          <span>{subject.name}</span>
+                          <strong>{subject.score}%</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="detail-card">
+                    <h4>Performance</h4>
+                    <p>
+                      <strong>Average:</strong>{" "}
+                      {selectedStudent.performance.averageScore}%
+                    </p>
+                    <p>
+                      <strong>Grade:</strong>{" "}
+                      {selectedStudent.performance.grade}
+                    </p>
+                    <p>{selectedStudent.performance.remark}</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -661,7 +900,14 @@ const AdminDashboard = () => {
                   {filteredTeachers.map((teacher) => (
                     <tr key={teacher.id}>
                       <td>{teacher.id}</td>
-                      <td>{teacher.name}</td>
+                      <td>
+                        <button
+                          className="entity-name-link"
+                          onClick={() => handleTeacherNameClick(teacher.id)}
+                        >
+                          {teacher.name}
+                        </button>
+                      </td>
                       <td>{teacher.subject}</td>
                       <td>{teacher.category || "Preschool"}</td>
                       <td>{teacher.class}</td>
@@ -677,6 +923,43 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {selectedTeacher && (
+              <div className="detail-panel">
+                <div className="detail-panel-header">
+                  <h3>{selectedTeacher.name}</h3>
+                  <span>
+                    {selectedTeacher.category} • {selectedTeacher.class}
+                  </span>
+                </div>
+                <div className="detail-grid">
+                  <div className="detail-card">
+                    <h4>Teaches</h4>
+                    <ul className="detail-list">
+                      {selectedTeacher.teaches.map((subject) => (
+                        <li key={subject}>{subject}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="detail-card">
+                    <h4>Performance</h4>
+                    <p>
+                      <strong>Rating:</strong>{" "}
+                      {selectedTeacher.performance.rating}/5
+                    </p>
+                    <p>
+                      <strong>Average Class Score:</strong>{" "}
+                      {selectedTeacher.performance.averageClassScore}%
+                    </p>
+                    <p>
+                      <strong>Students:</strong>{" "}
+                      {selectedTeacher.performance.students}
+                    </p>
+                    <p>{selectedTeacher.performance.remark}</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
