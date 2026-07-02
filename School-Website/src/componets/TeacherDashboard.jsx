@@ -50,6 +50,7 @@ const TeacherDashboard = () => {
     },
   ]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [newStudent, setNewStudent] = useState({
     name: "",
     grade: "",
@@ -58,6 +59,41 @@ const TeacherDashboard = () => {
     paid: "0",
   });
   const teacherClass = "A1";
+  const subjectData = [
+    {
+      name: "Math",
+      average: 84,
+      color: "#4c6ef5",
+      students: [
+        { name: "John Doe", marks: 85 },
+        { name: "Sarah Johnson", marks: 78 },
+        { name: "Mike Wilson", marks: 92 },
+        { name: "Emma Davis", marks: 80 },
+      ],
+    },
+    {
+      name: "English",
+      average: 81,
+      color: "#2f9e44",
+      students: [
+        { name: "John Doe", marks: 82 },
+        { name: "Sarah Johnson", marks: 79 },
+        { name: "Mike Wilson", marks: 88 },
+        { name: "Emma Davis", marks: 75 },
+      ],
+    },
+    {
+      name: "Science",
+      average: 86,
+      color: "#f08c00",
+      students: [
+        { name: "John Doe", marks: 90 },
+        { name: "Sarah Johnson", marks: 83 },
+        { name: "Mike Wilson", marks: 89 },
+        { name: "Emma Davis", marks: 82 },
+      ],
+    },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -343,6 +379,63 @@ const TeacherDashboard = () => {
                 </p>
               </div>
             </div>
+
+            <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>
+              Subject Performance
+            </h3>
+            <div className="subject-grid">
+              {subjectData.map((subject) => (
+                <button
+                  key={subject.name}
+                  className={`subject-card ${selectedSubject === subject.name ? "active" : ""}`}
+                  onClick={() =>
+                    setSelectedSubject(
+                      selectedSubject === subject.name ? null : subject.name,
+                    )
+                  }
+                >
+                  <h4>{subject.name}</h4>
+                  <p className="subject-average">{subject.average}%</p>
+                  <span className="subject-caption">Click to view marks</span>
+                </button>
+              ))}
+            </div>
+
+            {selectedSubject && (
+              <div className="detail-panel">
+                <div className="detail-panel-header">
+                  <h3>{selectedSubject} Marks</h3>
+                  <span>Student-by-student performance</span>
+                </div>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Marks</th>
+                      <th>Performance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjectData
+                      .find((subject) => subject.name === selectedSubject)
+                      ?.students.map((student) => (
+                        <tr key={student.name}>
+                          <td>{student.name}</td>
+                          <td>{student.marks}%</td>
+                          <td>
+                            <div className="progress-bar">
+                              <div
+                                className="progress-fill"
+                                style={{ width: `${student.marks}%` }}
+                              ></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>
               Student Performance
