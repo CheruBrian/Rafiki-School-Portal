@@ -4,7 +4,8 @@ import { useAuth } from "../context/useAuth";
 import "./Dashboard.css";
 
 const AdminDashboard = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, schoolData, addSchoolEntity, removeSchoolEntity } =
+    useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -24,148 +25,13 @@ const AdminDashboard = () => {
   });
 
   const gradeLevels = ["Preschool", "Lower Primary", "JSS", "SSS"];
-
-  const initialStudents = [
-    {
-      id: 1,
-      name: "John Doe",
-      class: "A1",
-      category: "Preschool",
-      fee: 5000,
-      paid: 3000,
-      balance: 2000,
-      subjects: [
-        { name: "Mathematics", score: 88 },
-        { name: "English", score: 84 },
-        { name: "Science", score: 90 },
-      ],
-      performance: {
-        averageScore: 87,
-        grade: "A",
-        remark: "Very strong progress this term.",
-      },
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      class: "B2",
-      category: "Lower Primary",
-      fee: 5000,
-      paid: 5000,
-      balance: 0,
-      subjects: [
-        { name: "Reading", score: 92 },
-        { name: "Math", score: 89 },
-        { name: "Creative Arts", score: 95 },
-      ],
-      performance: {
-        averageScore: 92,
-        grade: "A",
-        remark: "Excellent performance across all subjects.",
-      },
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      class: "A1",
-      category: "JSS",
-      fee: 5000,
-      paid: 2000,
-      balance: 3000,
-      subjects: [
-        { name: "Computer Studies", score: 78 },
-        { name: "History", score: 81 },
-        { name: "Biology", score: 76 },
-      ],
-      performance: {
-        averageScore: 78,
-        grade: "B",
-        remark: "Steady improvement and good effort.",
-      },
-    },
-  ];
-
-  const initialTeachers = [
-    {
-      id: 1,
-      name: "Mrs. Emma Wilson",
-      subject: "Mathematics",
-      class: "A1",
-      category: "Preschool",
-      teaches: ["Mathematics", "Early Literacy"],
-      performance: {
-        rating: 4.8,
-        averageClassScore: 88,
-        students: 24,
-        remark: "Excellent classroom engagement and results.",
-      },
-    },
-    {
-      id: 2,
-      name: "Mr. Robert Brown",
-      subject: "English",
-      class: "B2",
-      category: "Lower Primary",
-      teaches: ["English", "Social Studies"],
-      performance: {
-        rating: 4.6,
-        averageClassScore: 86,
-        students: 30,
-        remark: "Consistent and thoughtful teaching style.",
-      },
-    },
-    {
-      id: 3,
-      name: "Mrs. Sarah Davis",
-      subject: "Science",
-      class: "A1",
-      category: "JSS",
-      teaches: ["Science", "Chemistry"],
-      performance: {
-        rating: 4.7,
-        averageClassScore: 84,
-        students: 27,
-        remark: "Strong subject mastery and student support.",
-      },
-    },
-  ];
-
-  const initialAccountants = [
-    { id: 1, name: "Mr. Alex Thompson", status: "Active" },
-    { id: 2, name: "Ms. Lisa Anderson", status: "Active" },
-  ];
-
-  const initialFinanceTeam = [
-    { id: 1, name: "Ms. Grace Mwangi", role: "Finance Officer" },
-    { id: 2, name: "Mr. Samuel Oduor", role: "Finance Manager" },
-  ];
-
-  const initialDirectory = [
-    {
-      id: 101,
-      name: "Mrs. Emma Wilson",
-      role: "Teacher",
-      category: "Preschool",
-    },
-    {
-      id: 102,
-      name: "Mr. Alex Thompson",
-      role: "Accountant",
-      category: "Admin",
-    },
-    {
-      id: 103,
-      name: "Ms. Grace Mwangi",
-      role: "Finance Staff",
-      category: "Finance",
-    },
-  ];
-
-  const [students, setStudents] = useState(initialStudents);
-  const [teachers, setTeachers] = useState(initialTeachers);
-  const [accountants, setAccountants] = useState(initialAccountants);
-  const [financeTeam, setFinanceTeam] = useState(initialFinanceTeam);
-  const [directory, setDirectory] = useState(initialDirectory);
+  const {
+    students = [],
+    teachers = [],
+    accountants = [],
+    financeTeam = [],
+    directory = [],
+  } = schoolData;
   const [directorySearch, setDirectorySearch] = useState("");
   const [directoryRoleFilter, setDirectoryRoleFilter] = useState("All");
 
@@ -225,42 +91,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const getActiveEntityCount = () => {
-    switch (activeTab) {
-      case "students":
-        return students.length;
-      case "teachers":
-        return teachers.length;
-      case "accountants":
-        return accountants.length;
-      case "finances":
-        return financeTeam.length;
-      default:
-        return 0;
-    }
-  };
-
-  const createNextId = (items) => {
-    return items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1;
-  };
-
-  const addToDirectory = (name, role, category = "General") => {
-    const newEntry = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      name,
-      role,
-      category,
-    };
-
-    setDirectory((prev) => [newEntry, ...prev].slice(0, 8));
-  };
-
-  const removeFromDirectory = (name, role) => {
-    setDirectory((prev) =>
-      prev.filter((entry) => !(entry.name === name && entry.role === role)),
-    );
-  };
-
   const handleToggleAddForm = () => {
     if (showAddForm) {
       resetEntityForm();
@@ -285,104 +115,13 @@ const AdminDashboard = () => {
     event.preventDefault();
     if (!entityForm.name.trim()) return;
 
-    switch (activeTab) {
-      case "students": {
-        const fee = Number(entityForm.fee) || 0;
-        const paid = Number(entityForm.paid) || 0;
-        const newStudent = {
-          id: createNextId(students),
-          name: entityForm.name.trim(),
-          class: entityForm.class.trim() || "A1",
-          category: entityForm.category || "Preschool",
-          fee,
-          paid,
-          balance: Math.max(fee - paid, 0),
-        };
-        setStudents([newStudent, ...students]);
-        addToDirectory(
-          entityForm.name.trim(),
-          "Student",
-          entityForm.category || "Preschool",
-        );
-        break;
-      }
-      case "teachers": {
-        const newTeacher = {
-          id: createNextId(teachers),
-          name: entityForm.name.trim(),
-          subject: entityForm.subject.trim() || "General Studies",
-          class: entityForm.class.trim() || "A1",
-          category: entityForm.category || "Preschool",
-        };
-        setTeachers([newTeacher, ...teachers]);
-        addToDirectory(
-          entityForm.name.trim(),
-          "Teacher",
-          entityForm.category || "Preschool",
-        );
-        break;
-      }
-      case "accountants": {
-        const newAccountant = {
-          id: createNextId(accountants),
-          name: entityForm.name.trim(),
-          status: entityForm.status,
-        };
-        setAccountants([newAccountant, ...accountants]);
-        addToDirectory(entityForm.name.trim(), "Accountant", "Admin");
-        break;
-      }
-      case "finances": {
-        const newFinance = {
-          id: createNextId(financeTeam),
-          name: entityForm.name.trim(),
-          role: entityForm.role,
-        };
-        setFinanceTeam([newFinance, ...financeTeam]);
-        addToDirectory(entityForm.name.trim(), "Finance Staff", "Finance");
-        break;
-      }
-      default:
-        break;
-    }
-
+    addSchoolEntity(activeTab, entityForm);
     resetEntityForm();
     setShowAddForm(false);
   };
 
   const handleRemoveEntity = (id) => {
-    switch (activeTab) {
-      case "students": {
-        const student = students.find((entry) => entry.id === id);
-        setStudents(students.filter((studentEntry) => studentEntry.id !== id));
-        if (student) removeFromDirectory(student.name, "Student");
-        break;
-      }
-      case "teachers": {
-        const teacher = teachers.find((entry) => entry.id === id);
-        setTeachers(teachers.filter((teacherEntry) => teacherEntry.id !== id));
-        if (teacher) removeFromDirectory(teacher.name, "Teacher");
-        break;
-      }
-      case "accountants": {
-        const accountant = accountants.find((entry) => entry.id === id);
-        setAccountants(
-          accountants.filter((accountantEntry) => accountantEntry.id !== id),
-        );
-        if (accountant) removeFromDirectory(accountant.name, "Accountant");
-        break;
-      }
-      case "finances": {
-        const member = financeTeam.find((entry) => entry.id === id);
-        setFinanceTeam(
-          financeTeam.filter((memberEntry) => memberEntry.id !== id),
-        );
-        if (member) removeFromDirectory(member.name, "Finance Staff");
-        break;
-      }
-      default:
-        break;
-    }
+    removeSchoolEntity(activeTab, id);
   };
 
   const renderAddForm = () => {

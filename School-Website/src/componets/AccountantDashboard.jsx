@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import "./Dashboard.css";
 
 const AccountantDashboard = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, schoolData } = useAuth();
   const navigate = useNavigate();
   const [filterCategory, setFilterCategory] = useState("All");
 
@@ -13,55 +13,7 @@ const AccountantDashboard = () => {
     navigate("/login");
   };
 
-  // Mock student data
-  const students = [
-    {
-      id: 1,
-      name: "John Doe",
-      class: "A1",
-      category: "Preschool",
-      fee: 5000,
-      paid: 3000,
-      balance: 2000,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      class: "B2",
-      category: "Lower Primary",
-      fee: 5000,
-      paid: 5000,
-      balance: 0,
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      class: "A1",
-      category: "JSS",
-      fee: 5000,
-      paid: 2000,
-      balance: 3000,
-    },
-    {
-      id: 4,
-      name: "Sarah Williams",
-      class: "B2",
-      category: "SSS",
-      fee: 5000,
-      paid: 4000,
-      balance: 1000,
-    },
-    {
-      id: 5,
-      name: "David Brown",
-      class: "A1",
-      category: "Preschool",
-      fee: 5000,
-      paid: 1000,
-      balance: 4000,
-    },
-  ];
-
+  const students = schoolData.students || [];
   const categories = ["All", "Preschool", "Lower Primary", "JSS", "SSS"];
 
   const filteredStudents =
@@ -69,11 +21,20 @@ const AccountantDashboard = () => {
       ? students
       : students.filter((s) => (s.category || "Preschool") === filterCategory);
 
-  const totalBalance = filteredStudents.reduce((sum, s) => sum + s.balance, 0);
-  const totalFees = filteredStudents.reduce((sum, s) => sum + s.fee, 0);
-  const totalPaid = filteredStudents.reduce((sum, s) => sum + s.paid, 0);
+  const totalBalance = filteredStudents.reduce(
+    (sum, s) => sum + Number(s.balance || 0),
+    0,
+  );
+  const totalFees = filteredStudents.reduce(
+    (sum, s) => sum + Number(s.fee || 0),
+    0,
+  );
+  const totalPaid = filteredStudents.reduce(
+    (sum, s) => sum + Number(s.paid || 0),
+    0,
+  );
   const studentsWithBalance = filteredStudents.filter(
-    (s) => s.balance > 0,
+    (s) => Number(s.balance || 0) > 0,
   ).length;
 
   return (
@@ -161,22 +122,24 @@ const AccountantDashboard = () => {
                   <td>{student.name}</td>
                   <td>{student.category || "Preschool"}</td>
                   <td>{student.class}</td>
-                  <td>KES {student.fee.toLocaleString()}</td>
+                  <td>KES {Number(student.fee || 0).toLocaleString()}</td>
                   <td className="paid-amount">
-                    KES {student.paid.toLocaleString()}
+                    KES {Number(student.paid || 0).toLocaleString()}
                   </td>
                   <td
                     className={
-                      student.balance > 0 ? "balance-due" : "balance-paid"
+                      Number(student.balance || 0) > 0
+                        ? "balance-due"
+                        : "balance-paid"
                     }
                   >
-                    KES {student.balance.toLocaleString()}
+                    KES {Number(student.balance || 0).toLocaleString()}
                   </td>
                   <td>
                     <span
-                      className={`status-badge ${student.balance === 0 ? "paid" : "pending"}`}
+                      className={`status-badge ${Number(student.balance || 0) === 0 ? "paid" : "pending"}`}
                     >
-                      {student.balance === 0 ? "Paid" : "Pending"}
+                      {Number(student.balance || 0) === 0 ? "Paid" : "Pending"}
                     </span>
                   </td>
                 </tr>

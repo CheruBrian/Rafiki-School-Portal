@@ -1,73 +1,64 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
-import './Dashboard.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import "./Dashboard.css";
 
 const ParentDashboard = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, schoolData } = useAuth();
   const navigate = useNavigate();
   const [selectedChild, setSelectedChild] = useState(0);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
-  // Mock data - children of parent
-  const children = [
-    {
-      id: 1,
-      name: 'John Doe',
-      grade: 'Grade 8',
-      class: 'A1',
-      subjects: [
-        { name: 'Mathematics', marks: 85, grade: 'A' },
-        { name: 'English', marks: 78, grade: 'B' },
-        { name: 'Science', marks: 92, grade: 'A' },
-        { name: 'History', marks: 88, grade: 'A' },
-        { name: 'PE', marks: 90, grade: 'A' },
-      ],
-      fee: 5000,
-      paid: 3000,
-      balance: 2000,
-    },
-    {
-      id: 2,
-      name: 'Sarah Doe',
-      grade: 'Grade 6',
-      class: 'B2',
-      subjects: [
-        { name: 'Mathematics', marks: 80, grade: 'B+' },
-        { name: 'English', marks: 85, grade: 'A' },
-        { name: 'Science', marks: 88, grade: 'A' },
-        { name: 'History', marks: 82, grade: 'B+' },
-        { name: 'Art', marks: 95, grade: 'A+' },
-      ],
-      fee: 5000,
-      paid: 5000,
-      balance: 0,
-    },
-  ];
+  const children = (schoolData.students || []).map((student) => ({
+    id: student.id,
+    name: student.name,
+    grade: student.performance?.grade || student.grade || "TBD",
+    class: student.class || "A1",
+    subjects: (student.subjects || []).length
+      ? student.subjects.map((subject) => ({
+          name: subject.name,
+          marks: subject.score || subject.marks || 0,
+          grade: subject.grade || student.performance?.grade || "TBD",
+        }))
+      : [
+          {
+            name: "General Studies",
+            marks: Number(student.marks || 0),
+            grade: student.performance?.grade || "TBD",
+          },
+        ],
+    fee: Number(student.fee || 0),
+    paid: Number(student.paid || 0),
+    balance: Number(
+      student.balance ||
+        Math.max(Number(student.fee || 0) - Number(student.paid || 0), 0),
+    ),
+  }));
 
-  const child = children[selectedChild];
+  const child = children[selectedChild] || children[0];
 
   const getGradeColor = (grade) => {
     switch (grade) {
-      case 'A':
-      case 'A+':
-        return '#51cf66';
-      case 'B':
-      case 'B+':
-        return '#4c6ef5';
-      case 'C':
-      case 'C+':
-        return '#fcc419';
+      case "A":
+      case "A+":
+        return "#51cf66";
+      case "B":
+      case "B+":
+        return "#4c6ef5";
+      case "C":
+      case "C+":
+        return "#fcc419";
       default:
-        return '#ff6b6b';
+        return "#ff6b6b";
     }
   };
 
-  const avgMarks = child.subjects.reduce((sum, s) => sum + s.marks, 0) / child.subjects.length;
+  const avgMarks =
+    child.subjects.reduce((sum, s) => sum + s.marks, 0) / child.subjects.length;
 
   return (
     <div className="dashboard-container">
@@ -75,27 +66,38 @@ const ParentDashboard = () => {
         <h1>Parent Portal</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">Logout</button>
+          <button onClick={handleLogout} className="btn-logout">
+            Logout
+          </button>
         </div>
       </header>
 
       <main className="dashboard-content">
-        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '30px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)' }}>
+        <div
+          style={{
+            background: "white",
+            padding: "20px",
+            borderRadius: "8px",
+            marginBottom: "30px",
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
+          }}
+        >
           <h2 style={{ marginTop: 0 }}>My Children</h2>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {children.map((c, index) => (
               <button
                 key={c.id}
                 onClick={() => setSelectedChild(index)}
                 style={{
-                  padding: '10px 20px',
-                  backgroundColor: selectedChild === index ? '#667eea' : '#f0f0f0',
-                  color: selectedChild === index ? 'white' : '#333',
-                  border: selectedChild === index ? 'none' : '2px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s'
+                  padding: "10px 20px",
+                  backgroundColor:
+                    selectedChild === index ? "#667eea" : "#f0f0f0",
+                  color: selectedChild === index ? "white" : "#333",
+                  border: selectedChild === index ? "none" : "2px solid #ddd",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  transition: "all 0.3s",
                 }}
               >
                 {c.name}
@@ -104,16 +106,38 @@ const ParentDashboard = () => {
           </div>
         </div>
 
-        <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', marginBottom: '30px' }}>
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
+            marginBottom: "30px",
+          }}
+        >
           <h2 style={{ marginTop: 0 }}>Student Information: {child.name}</h2>
           <div className="teacher-info">
-            <p><strong>Grade:</strong> {child.grade}</p>
-            <p><strong>Class:</strong> {child.class}</p>
-            <p><strong>Average Marks:</strong> {avgMarks.toFixed(1)}</p>
+            <p>
+              <strong>Grade:</strong> {child.grade}
+            </p>
+            <p>
+              <strong>Class:</strong> {child.class}
+            </p>
+            <p>
+              <strong>Average Marks:</strong> {avgMarks.toFixed(1)}
+            </p>
           </div>
         </div>
 
-        <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', marginBottom: '30px' }}>
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
+            marginBottom: "30px",
+          }}
+        >
           <h2 style={{ marginTop: 0 }}>Academic Performance</h2>
           <div className="stats-grid">
             <div className="stat-card">
@@ -122,7 +146,9 @@ const ParentDashboard = () => {
             </div>
             <div className="stat-card">
               <h3>Highest Subject</h3>
-              <p className="stat-value">{Math.max(...child.subjects.map(s => s.marks))}</p>
+              <p className="stat-value">
+                {Math.max(...child.subjects.map((s) => s.marks))}
+              </p>
             </div>
             <div className="stat-card">
               <h3>Number of Subjects</h3>
@@ -130,7 +156,9 @@ const ParentDashboard = () => {
             </div>
           </div>
 
-          <h3 style={{ marginTop: '30px', marginBottom: '20px' }}>Subject Grades</h3>
+          <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>
+            Subject Grades
+          </h3>
           <table className="data-table">
             <thead>
               <tr>
@@ -146,31 +174,37 @@ const ParentDashboard = () => {
                   <td>{subject.name}</td>
                   <td>{subject.marks}</td>
                   <td>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '4px 12px',
-                      backgroundColor: getGradeColor(subject.grade),
-                      color: 'white',
-                      borderRadius: '4px',
-                      fontWeight: 'bold'
-                    }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 12px",
+                        backgroundColor: getGradeColor(subject.grade),
+                        color: "white",
+                        borderRadius: "4px",
+                        fontWeight: "bold",
+                      }}
+                    >
                       {subject.grade}
                     </span>
                   </td>
                   <td>
-                    <div style={{
-                      backgroundColor: '#f0f0f0',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      height: '20px',
-                      minWidth: '100px'
-                    }}>
-                      <div style={{
-                        backgroundColor: getGradeColor(subject.grade),
-                        height: '100%',
-                        width: `${(subject.marks / 100) * 100}%`,
-                        transition: 'width 0.3s'
-                      }}></div>
+                    <div
+                      style={{
+                        backgroundColor: "#f0f0f0",
+                        borderRadius: "4px",
+                        overflow: "hidden",
+                        height: "20px",
+                        minWidth: "100px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          backgroundColor: getGradeColor(subject.grade),
+                          height: "100%",
+                          width: `${(subject.marks / 100) * 100}%`,
+                          transition: "width 0.3s",
+                        }}
+                      ></div>
                     </div>
                   </td>
                 </tr>
@@ -179,7 +213,14 @@ const ParentDashboard = () => {
           </table>
         </div>
 
-        <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)' }}>
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
+          }}
+        >
           <h2 style={{ marginTop: 0 }}>School Fee Status</h2>
           <div className="stats-grid">
             <div className="stat-card">
@@ -190,15 +231,23 @@ const ParentDashboard = () => {
               <h3>Amount Paid</h3>
               <p className="stat-value">KES {child.paid.toLocaleString()}</p>
             </div>
-            <div className={`stat-card ${child.balance > 0 ? '' : ''}`} style={{
-              background: child.balance > 0 ? 'linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%)' : 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)'
-            }}>
+            <div
+              className={`stat-card ${child.balance > 0 ? "" : ""}`}
+              style={{
+                background:
+                  child.balance > 0
+                    ? "linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%)"
+                    : "linear-gradient(135deg, #51cf66 0%, #40c057 100%)",
+              }}
+            >
               <h3>Balance Left</h3>
               <p className="stat-value">KES {child.balance.toLocaleString()}</p>
             </div>
           </div>
 
-          <h3 style={{ marginTop: '30px', marginBottom: '20px' }}>Fee Details</h3>
+          <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>
+            Fee Details
+          </h3>
           <table className="data-table">
             <thead>
               <tr>
@@ -213,11 +262,17 @@ const ParentDashboard = () => {
               </tr>
               <tr>
                 <td>Amount Paid</td>
-                <td className="paid-amount">KES {child.paid.toLocaleString()}</td>
+                <td className="paid-amount">
+                  KES {child.paid.toLocaleString()}
+                </td>
               </tr>
               <tr>
-                <td><strong>Balance Left (Outstanding)</strong></td>
-                <td className={child.balance > 0 ? 'balance-due' : 'balance-paid'}>
+                <td>
+                  <strong>Balance Left (Outstanding)</strong>
+                </td>
+                <td
+                  className={child.balance > 0 ? "balance-due" : "balance-paid"}
+                >
                   <strong>KES {child.balance.toLocaleString()}</strong>
                 </td>
               </tr>
@@ -227,14 +282,29 @@ const ParentDashboard = () => {
           {child.balance > 0 && (
             <div className="warning-section">
               <h3>⚠️ Outstanding Fee Notice</h3>
-              <p>Your child has an outstanding school fee balance of <strong>KES {child.balance.toLocaleString()}</strong>. Please make payment at your earliest convenience.</p>
+              <p>
+                Your child has an outstanding school fee balance of{" "}
+                <strong>KES {child.balance.toLocaleString()}</strong>. Please
+                make payment at your earliest convenience.
+              </p>
               <p>Contact the school accountant for payment arrangements.</p>
             </div>
           )}
 
           {child.balance === 0 && (
-            <div style={{ background: '#e8f5e9', borderLeft: '4px solid #51cf66', padding: '20px', borderRadius: '4px', color: '#2e7d32', marginTop: '20px' }}>
-              <h3 style={{ marginTop: 0, color: '#1b5e20' }}>✓ Fees Paid in Full</h3>
+            <div
+              style={{
+                background: "#e8f5e9",
+                borderLeft: "4px solid #51cf66",
+                padding: "20px",
+                borderRadius: "4px",
+                color: "#2e7d32",
+                marginTop: "20px",
+              }}
+            >
+              <h3 style={{ marginTop: 0, color: "#1b5e20" }}>
+                ✓ Fees Paid in Full
+              </h3>
               <p>Thank you! All school fees have been paid in full.</p>
             </div>
           )}

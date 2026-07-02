@@ -4,51 +4,10 @@ import { useAuth } from "../context/useAuth";
 import "./Dashboard.css";
 
 const TeacherDashboard = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, schoolData, addSchoolEntity, removeSchoolEntity } =
+    useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("students");
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      class: "A1",
-      grade: "A",
-      marks: 85,
-      fee: 5000,
-      paid: 3000,
-      balance: 2000,
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      class: "A1",
-      grade: "B",
-      marks: 78,
-      fee: 5000,
-      paid: 5000,
-      balance: 0,
-    },
-    {
-      id: 3,
-      name: "Mike Wilson",
-      class: "A1",
-      grade: "A",
-      marks: 92,
-      fee: 5000,
-      paid: 2000,
-      balance: 3000,
-    },
-    {
-      id: 4,
-      name: "Emma Davis",
-      class: "A1",
-      grade: "B+",
-      marks: 80,
-      fee: 5000,
-      paid: 4000,
-      balance: 1000,
-    },
-  ]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [newStudent, setNewStudent] = useState({
@@ -59,6 +18,9 @@ const TeacherDashboard = () => {
     paid: "0",
   });
   const teacherClass = "A1";
+  const students = (schoolData.students || []).filter(
+    (student) => (student.class || teacherClass) === teacherClass,
+  );
   const subjectData = [
     {
       name: "Math",
@@ -133,24 +95,29 @@ const TeacherDashboard = () => {
     const marks = Number(newStudent.marks) || 0;
     const fee = Number(newStudent.fee) || 5000;
     const paid = Number(newStudent.paid) || 0;
-    const addedStudent = {
-      id: students.length ? Math.max(...students.map((s) => s.id)) + 1 : 1,
+
+    addSchoolEntity("students", {
       name: newStudent.name.trim(),
       class: teacherClass,
+      category: "Preschool",
       grade: newStudent.grade.trim() || "TBD",
       marks,
       fee,
       paid,
       balance: Math.max(fee - paid, 0),
-    };
+      performance: {
+        averageScore: marks,
+        grade: newStudent.grade.trim() || "TBD",
+        remark: "Added from the teacher dashboard.",
+      },
+    });
 
-    setStudents([addedStudent, ...students]);
     resetAddForm();
     setShowAddForm(false);
   };
 
   const handleRemoveStudent = (id) => {
-    setStudents(students.filter((student) => student.id !== id));
+    removeSchoolEntity("students", id);
   };
 
   const avgGrade = students.length
