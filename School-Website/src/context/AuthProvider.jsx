@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
 
-const STORAGE_KEY = "school-portal-data";
+const API_BASE_URL = "http://localhost:3001";
 
 const createDefaultSchoolData = () => ({
   students: [
@@ -143,33 +143,7 @@ const createDefaultSchoolData = () => ({
   ],
 });
 
-const getInitialSchoolData = () => {
-  if (typeof window === "undefined") {
-    return createDefaultSchoolData();
-  }
-
-  try {
-    const storedData = window.localStorage.getItem(STORAGE_KEY);
-    if (storedData) {
-      const parsed = JSON.parse(storedData);
-      return {
-        ...createDefaultSchoolData(),
-        ...parsed,
-        students: parsed.students || createDefaultSchoolData().students,
-        teachers: parsed.teachers || createDefaultSchoolData().teachers,
-        accountants:
-          parsed.accountants || createDefaultSchoolData().accountants,
-        financeTeam:
-          parsed.financeTeam || createDefaultSchoolData().financeTeam,
-        directory: parsed.directory || createDefaultSchoolData().directory,
-      };
-    }
-  } catch {
-    // Fall back to defaults if storage data is invalid.
-  }
-
-  return createDefaultSchoolData();
-};
+const getInitialSchoolData = () => createDefaultSchoolData();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -177,10 +151,23 @@ export const AuthProvider = ({ children }) => {
   const [schoolData, setSchoolData] = useState(getInitialSchoolData);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(schoolData));
-    }
-  }, [schoolData]);
+    const loadSchoolData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/school-data`);
+        if (!response.ok) {
+          throw new Error("Unable to load school data");
+        }
+        const result = await response.json();
+        if (result?.data) {
+          setSchoolData(result.data);
+        }
+      } catch {
+        setSchoolData(getInitialSchoolData());
+      }
+    };
+
+    loadSchoolData();
+  }, []);
 
   // Mock user database - in production, this would be a backend
   const validUsers = {
@@ -216,191 +203,52 @@ export const AuthProvider = ({ children }) => {
   const createNextId = (items = []) =>
     items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1;
 
-  const addSchoolEntity = (entityType, payload = {}) => {
+  const addSchoolEntity = async (entityType, payload = {}) => {
     const trimmedName = payload.name?.trim();
     if (!trimmedName) return;
 
-    switch (entityType) {
-      case "students": {
-        const fee = Number(payload.fee) || 0;
-        const paid = Number(payload.paid) || 0;
-        const newStudent = {
-          id: createNextId(schoolData.students),
-          name: trimmedName,
-          class: payload.class?.trim() || "A1",
-          category: payload.category || "Preschool",
-          fee,
-          paid,
-          balance: Math.max(fee - paid, 0),
-          grade: payload.grade?.trim() || "TBD",
-          marks: Number(payload.marks) || 0,
-          subjects: payload.subjects || [
-            { name: "General Studies", score: Number(payload.marks) || 0 },
-          ],
-          performance: payload.performance || {
-            averageScore: Number(payload.marks) || 0,
-            grade: payload.grade?.trim() || "TBD",
-            remark: "Added from the school portal.",
-          },
-        };
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/school-data/${entityType}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
 
-        setSchoolData((prev) => ({
-          ...prev,
-          students: [newStudent, ...prev.students],
-          directory: [
-            {
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              name: trimmedName,
-              role: "Student",
-              category: payload.category || "Preschool",
-            },
-            ...prev.directory,
-          ].slice(0, 8),
-        }));
-        break;
+      if (!response.ok) {
+        throw new Error("Unable to save school data");
       }
-      case "teachers": {
-        const newTeacher = {
-          id: createNextId(schoolData.teachers),
-          name: trimmedName,
-          subject: payload.subject?.trim() || "General Studies",
-          class: payload.class?.trim() || "A1",
-          category: payload.category || "Preschool",
-          teaches: payload.teaches || ["General Studies"],
-          performance: payload.performance || {
-            rating: 4.5,
-            averageClassScore: 0,
-            students: 0,
-            remark: "Added from the school portal.",
-          },
-        };
 
-        setSchoolData((prev) => ({
-          ...prev,
-          teachers: [newTeacher, ...prev.teachers],
-          directory: [
-            {
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              name: trimmedName,
-              role: "Teacher",
-              category: payload.category || "Preschool",
-            },
-            ...prev.directory,
-          ].slice(0, 8),
-        }));
-        break;
+      const result = await response.json();
+      if (result?.data) {
+        setSchoolData(result.data);
       }
-      case "accountants": {
-        const newAccountant = {
-          id: createNextId(schoolData.accountants),
-          name: trimmedName,
-          status: payload.status || "Active",
-        };
-
-        setSchoolData((prev) => ({
-          ...prev,
-          accountants: [newAccountant, ...prev.accountants],
-          directory: [
-            {
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              name: trimmedName,
-              role: "Accountant",
-              category: "Admin",
-            },
-            ...prev.directory,
-          ].slice(0, 8),
-        }));
-        break;
-      }
-      case "finances": {
-        const newFinance = {
-          id: createNextId(schoolData.financeTeam),
-          name: trimmedName,
-          role: payload.role || "Finance Officer",
-        };
-
-        setSchoolData((prev) => ({
-          ...prev,
-          financeTeam: [newFinance, ...prev.financeTeam],
-          directory: [
-            {
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              name: trimmedName,
-              role: "Finance Staff",
-              category: "Finance",
-            },
-            ...prev.directory,
-          ].slice(0, 8),
-        }));
-        break;
-      }
-      default:
-        break;
+    } catch {
+      // keep the UI responsive even if the backend is temporarily unavailable
     }
   };
 
-  const removeSchoolEntity = (entityType, id) => {
-    switch (entityType) {
-      case "students":
-        setSchoolData((prev) => ({
-          ...prev,
-          students: prev.students.filter((student) => student.id !== id),
-          directory: prev.directory.filter(
-            (entry) =>
-              !(
-                entry.name ===
-                  prev.students.find((student) => student.id === id)?.name &&
-                entry.role === "Student"
-              ),
-          ),
-        }));
-        break;
-      case "teachers":
-        setSchoolData((prev) => ({
-          ...prev,
-          teachers: prev.teachers.filter((teacher) => teacher.id !== id),
-          directory: prev.directory.filter(
-            (entry) =>
-              !(
-                entry.name ===
-                  prev.teachers.find((teacher) => teacher.id === id)?.name &&
-                entry.role === "Teacher"
-              ),
-          ),
-        }));
-        break;
-      case "accountants":
-        setSchoolData((prev) => ({
-          ...prev,
-          accountants: prev.accountants.filter(
-            (accountant) => accountant.id !== id,
-          ),
-          directory: prev.directory.filter(
-            (entry) =>
-              !(
-                entry.name ===
-                  prev.accountants.find((accountant) => accountant.id === id)
-                    ?.name && entry.role === "Accountant"
-              ),
-          ),
-        }));
-        break;
-      case "finances":
-        setSchoolData((prev) => ({
-          ...prev,
-          financeTeam: prev.financeTeam.filter((member) => member.id !== id),
-          directory: prev.directory.filter(
-            (entry) =>
-              !(
-                entry.name ===
-                  prev.financeTeam.find((member) => member.id === id)?.name &&
-                entry.role === "Finance Staff"
-              ),
-          ),
-        }));
-        break;
-      default:
-        break;
+  const removeSchoolEntity = async (entityType, id) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/school-data/${entityType}/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to delete school data");
+      }
+
+      const result = await response.json();
+      if (result?.data) {
+        setSchoolData(result.data);
+      }
+    } catch {
+      // keep the UI responsive even if the backend is temporarily unavailable
     }
   };
 

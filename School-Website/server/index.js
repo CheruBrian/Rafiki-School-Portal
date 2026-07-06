@@ -2,6 +2,12 @@ import express from "express";
 import cors from "cors";
 import pkg from "pg";
 import mysql from "mysql2/promise";
+import {
+  initializeDatabase,
+  getSchoolData,
+  createSchoolEntity,
+  deleteSchoolEntity,
+} from "./db.js";
 
 const { Pool } = pkg;
 const app = express();
@@ -12,6 +18,39 @@ app.use(express.json());
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/api/school-data", async (_req, res) => {
+  try {
+    const schoolData = await getSchoolData();
+    res.json({ ok: true, data: schoolData });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/school-data/:entityType", async (req, res) => {
+  try {
+    const schoolData = await createSchoolEntity(
+      req.params.entityType,
+      req.body,
+    );
+    res.json({ ok: true, data: schoolData });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete("/api/school-data/:entityType/:id", async (req, res) => {
+  try {
+    const schoolData = await deleteSchoolEntity(
+      req.params.entityType,
+      Number(req.params.id),
+    );
+    res.json({ ok: true, data: schoolData });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.post("/api/query", async (req, res) => {
@@ -65,6 +104,14 @@ app.post("/api/query", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`SQL client server listening on port ${port}`);
+const startServer = async () => {
+  await initializeDatabase();
+  app.listen(port, () => {
+    console.log(`School backend listening on port ${port}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error("Failed to start backend", error);
+  process.exit(1);
 });
