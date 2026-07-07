@@ -9,10 +9,10 @@
     "script": "npm run dev",
     "build": "vite build",
     "serve": "serve -s build",
-    "server": "serve -s build",
+    "server": "node server/index.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sql-server": "node server/index.js"
+    "sql-server": "npm run server"
   },
   "dependencies": {
     "cors": "^2.8.5",
