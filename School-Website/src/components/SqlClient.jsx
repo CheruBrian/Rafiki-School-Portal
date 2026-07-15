@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "../componets/Dashboard.css";
+import "./Dashboard.css";
+import { API_BASE_URL } from "../config/api";
 
 const defaultQuery = `SELECT current_database() AS database_name;`;
 
@@ -13,6 +14,7 @@ const SqlClient = () => {
     database: "postgres",
   });
   const [query, setQuery] = useState(defaultQuery);
+  const [adminToken, setAdminToken] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,9 +30,12 @@ const SqlClient = () => {
     setResult(null);
 
     try {
-      const res = await fetch("http://localhost:3001/api/query", {
+      const res = await fetch(`${API_BASE_URL}/api/query`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": adminToken,
+        },
         body: JSON.stringify({ ...connection, query }),
       });
 
@@ -118,6 +123,17 @@ const SqlClient = () => {
                 className="input-field"
               />
             </div>
+          </div>
+
+          <div className="form-field">
+            <label>Admin token</label>
+            <input
+              type="password"
+              value={adminToken}
+              onChange={(e) => setAdminToken(e.target.value)}
+              className="input-field"
+              placeholder="Required to run queries"
+            />
           </div>
 
           <div className="form-field">
