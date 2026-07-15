@@ -1,18 +1,18 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
-import { ProtectedRoute } from "./componets/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Pages
-import Login from "./componets/Login.jsx";
-import Schoolhome from "./componets/Schoolhome.jsx";
-import SchoolAbout from "./componets/SchoolAbout.jsx";
-import SchoolContact from "./componets/SchoolContact.jsx";
-import AdminDashboard from "./componets/AdminDashboard.jsx";
-import AccountantDashboard from "./componets/AccountantDashboard.jsx";
-import TeacherDashboard from "./componets/TeacherDashboard.jsx";
-import ParentDashboard from "./componets/ParentDashboard.jsx";
-import Unauthorized from "./componets/Unauthorized.jsx";
+import Login from "./components/Login.jsx";
+import Schoolhome from "./components/Schoolhome.jsx";
+import SchoolAbout from "./components/SchoolAbout.jsx";
+import SchoolContact from "./components/SchoolContact.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
+import AccountantDashboard from "./components/AccountantDashboard.jsx";
+import TeacherDashboard from "./components/TeacherDashboard.jsx";
+import ParentDashboard from "./components/ParentDashboard.jsx";
+import Unauthorized from "./components/Unauthorized.jsx";
 import SqlClient from "./components/SqlClient.jsx";
 
 function App() {
@@ -25,7 +25,16 @@ function App() {
         <Route path="/contact" element={<SchoolContact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/sql-client" element={<SqlClient />} />
+
+        {/* Protected Route - Admin Only. This tool runs raw SQL, it must never be public. */}
+        <Route
+          path="/sql-client"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <SqlClient />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Routes - Admin Only */}
         <Route

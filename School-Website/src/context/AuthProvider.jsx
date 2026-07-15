@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
-
-const API_BASE_URL = "http://localhost:3001";
+import { API_BASE_URL } from "../config/api";
 
 const createDefaultSchoolData = () => ({
   students: [
@@ -145,9 +144,22 @@ const createDefaultSchoolData = () => ({
 
 const getInitialSchoolData = () => createDefaultSchoolData();
 
+const AUTH_STORAGE_KEY = "rafiki_auth_session";
+
+const getStoredSession = () => {
+  try {
+    const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [session, setSession] = useState(getStoredSession);
+  const user = session?.user ?? null;
+  const token = session?.token ?? null;
+  const isAuthenticated = !!session;
   const [schoolData, setSchoolData] = useState(getInitialSchoolData);
 
   useEffect(() => {
@@ -169,35 +181,52 @@ export const AuthProvider = ({ children }) => {
     loadSchoolData();
   }, []);
 
-  // Mock user database - in production, this would be a backend
-  const validUsers = {
-    admin: { password: "admin123", role: "admin", name: "Administrator" },
-    accountant: {
-      password: "accountant123",
-      role: "accountant",
-      name: "Accountant",
-    },
-    teacher: { password: "teacher123", role: "teacher", name: "Teacher" },
-    parent: { password: "parent123", role: "parent", name: "Parent" },
-  };
-
-  const login = (username, password) => {
-    const userData = validUsers[username];
-    if (userData && userData.password === password) {
-      setUser({
-        username,
-        role: userData.role,
-        name: userData.name,
+  const login = async (username, password) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       });
-      setIsAuthenticated(true);
+      const result = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result?.error || "Invalid username or password",
+        };
+      }
+      const nextSession = { token: result.token, user: result.user };
+      setSession(nextSession);
+      try {
+        sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
+      } catch {
+        // sessionStorage may be unavailable (e.g. private browsing) - auth
+        // still works for this tab, it just won't survive a refresh.
+      }
       return { success: true };
+    } catch {
+      return {
+        success: false,
+        error: "Unable to reach the server. Please try again.",
+      };
     }
-    return { success: false, error: "Invalid username or password" };
   };
 
   const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
+    if (token) {
+      fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {
+        // best-effort - clear the local session regardless
+      });
+    }
+    setSession(null);
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   };
 
   const createNextId = (items = []) =>
@@ -212,7 +241,10 @@ export const AuthProvider = ({ children }) => {
         `${API_BASE_URL}/api/school-data/${entityType}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify(payload),
         },
       );
@@ -236,6 +268,7 @@ export const AuthProvider = ({ children }) => {
         `${API_BASE_URL}/api/school-data/${entityType}/${id}`,
         {
           method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         },
       );
 
@@ -262,7 +295,7 @@ export const AuthProvider = ({ children }) => {
       addSchoolEntity,
       removeSchoolEntity,
     }),
-    [user, isAuthenticated, schoolData],
+    [session, schoolData],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
