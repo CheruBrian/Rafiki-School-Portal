@@ -104,6 +104,38 @@ app.post("/api/query", async (req, res) => {
   }
 });
 
+const DEMO_USERS = {
+  admin: { password: "admin123", role: "admin", name: "Administrator" },
+  accountant: {
+    password: "accountant123",
+    role: "accountant",
+    name: "Accountant",
+  },
+  teacher: { password: "teacher123", role: "teacher", name: "Teacher" },
+  parent: { password: "parent123", role: "parent", name: "Parent" },
+};
+
+app.post("/api/auth/login", (req, res) => {
+  const { username, password } = req.body;
+  const account = DEMO_USERS[username];
+
+  if (!account || account.password !== password) {
+    return res.status(401).json({ error: "Invalid username or password" });
+  }
+
+  // Demo token - not secure, fine for local/demo use only
+  const token = Buffer.from(`${username}:${Date.now()}`).toString("base64");
+
+  res.json({
+    token,
+    user: { username, role: account.role, name: account.name },
+  });
+});
+
+app.post("/api/auth/logout", (_req, res) => {
+  res.json({ ok: true });
+});
+
 const startServer = async () => {
   await initializeDatabase();
   app.listen(port, () => {
