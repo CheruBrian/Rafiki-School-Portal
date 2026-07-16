@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 import sqlite3 from "sqlite3";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,6 +42,23 @@ const all = (sql, params = []) =>
       resolve(rows);
     });
   });
+
+// Password hashing using Node's built-in crypto (scrypt) - no extra
+// dependency needed. Stored as "salt:hash", both hex-encoded.
+const hashPassword = (password) => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+};
+
+const verifyPassword = (password, storedHash) => {
+  const [salt, hash] = (storedHash || "").split(":");
+  if (!salt || !hash) return false;
+  const candidateHash = crypto.scryptSync(password, salt, 64);
+  const storedHashBuffer = Buffer.from(hash, "hex");
+  if (candidateHash.length !== storedHashBuffer.length) return false;
+  return crypto.timingSafeEqual(candidateHash, storedHashBuffer);
+};
 
 const seedData = {
   students: [
@@ -167,6 +185,17 @@ const createTables = async () => {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 };
 
 const ensureSeedData = async () => {
@@ -251,6 +280,50 @@ const ensureSeedData = async () => {
       );
     }
   }
+
+  const userCount = await get("SELECT COUNT(*) AS count FROM users");
+  if (userCount.count === 0) {
+    // Demo accounts only. CHANGE THESE PASSWORDS (or replace this seed
+    // entirely) before a real/public deployment - anyone who has read
+    // this open-source repo knows these defaults.
+    const demoUsers = [
+      {
+        username: "admin",
+        name: "Administrator",
+        role: "admin",
+        password: "admin123",
+      },
+      {
+        username: "accountant",
+        name: "Accountant",
+        role: "accountant",
+        password: "accountant123",
+      },
+      {
+        username: "teacher",
+        name: "Teacher",
+        role: "teacher",
+        password: "teacher123",
+      },
+      {
+        username: "parent",
+        name: "Parent",
+        role: "parent",
+        password: "parent123",
+      },
+    ];
+    for (const demoUser of demoUsers) {
+      await run(
+        `INSERT INTO users (username, name, role, password_hash) VALUES (?, ?, ?, ?);`,
+        [
+          demoUser.username,
+          demoUser.name,
+          demoUser.role,
+          hashPassword(demoUser.password),
+        ],
+      );
+    }
+  }
 };
 
 const getNextId = async (tableName) => {
@@ -286,6 +359,7 @@ const requiredColumns = {
   accountants: ["id", "name", "status", "created_at"],
   finance_team: ["id", "name", "role", "created_at"],
   directory: ["id", "name", "role", "category", "created_at"],
+  users: ["id", "username", "name", "role", "password_hash", "created_at"],
 };
 
 const verifyDatabaseSchema = async () => {
@@ -331,6 +405,22 @@ export const initializeDatabase = async () => {
   }
 
   await ensureSeedData();
+};
+
+export const verifyCredentials = async (username, password) => {
+  const user = await get(
+    "SELECT id, username, name, role, password_hash FROM users WHERE username = ?",
+    [username],
+  );
+  if (!user || !verifyPassword(password, user.password_hash)) {
+    return null;
+  }
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+  };
 };
 
 export const getSchoolData = async () => {
