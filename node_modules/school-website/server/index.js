@@ -7,6 +7,8 @@ import {
   getSchoolData,
   createSchoolEntity,
   deleteSchoolEntity,
+  addStudentSubject,
+  verifyCredentials,
 } from "./db.js";
 
 const { Pool } = pkg;
@@ -17,6 +19,30 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await verifyCredentials(username, password);
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    // Demo token - not a real session/JWT, fine for local/demo use only
+    const token = Buffer.from(`${user.username}:${Date.now()}`).toString(
+      "base64",
+    );
+
+    res.json({ token, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/auth/logout", (_req, res) => {
   res.json({ ok: true });
 });
 
@@ -47,6 +73,15 @@ app.delete("/api/school-data/:entityType/:id", async (req, res) => {
       req.params.entityType,
       Number(req.params.id),
     );
+    res.json({ ok: true, data: schoolData });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/school-data/students/:id/subjects", async (req, res) => {
+  try {
+    const schoolData = await addStudentSubject(Number(req.params.id), req.body);
     res.json({ ok: true, data: schoolData });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -102,38 +137,6 @@ app.post("/api/query", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-const DEMO_USERS = {
-  admin: { password: "admin123", role: "admin", name: "Administrator" },
-  accountant: {
-    password: "accountant123",
-    role: "accountant",
-    name: "Accountant",
-  },
-  teacher: { password: "teacher123", role: "teacher", name: "Teacher" },
-  parent: { password: "parent123", role: "parent", name: "Parent" },
-};
-
-app.post("/api/auth/login", (req, res) => {
-  const { username, password } = req.body;
-  const account = DEMO_USERS[username];
-
-  if (!account || account.password !== password) {
-    return res.status(401).json({ error: "Invalid username or password" });
-  }
-
-  // Demo token - not secure, fine for local/demo use only
-  const token = Buffer.from(`${username}:${Date.now()}`).toString("base64");
-
-  res.json({
-    token,
-    user: { username, role: account.role, name: account.name },
-  });
-});
-
-app.post("/api/auth/logout", (_req, res) => {
-  res.json({ ok: true });
 });
 
 const startServer = async () => {

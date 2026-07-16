@@ -1,11 +1,30 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import {
+  getSubjectsForLevel,
+  scoreToGrade,
+  averageOf,
+} from "../components/Subjects";
 import "./Dashboard.css";
 
 const TeacherDashboard = () => {
-  const { logout, user, schoolData, addSchoolEntity, removeSchoolEntity } =
-    useAuth();
+  const {
+    logout,
+    user,
+    schoolData,
+    addSchoolEntity,
+    removeSchoolEntity,
+    addStudentSubject,
+  } = useAuth();
+  // ...
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [showAddSubjectForm, setShowAddSubjectForm] = useState(false);
+  const [subjectForm, setSubjectForm] = useState({
+    studentId: "",
+    name: "",
+    score: "",
+  });
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("students");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -56,6 +75,38 @@ const TeacherDashboard = () => {
       ],
     },
   ];
+
+  const handleStudentClick = (id) =>
+    setSelectedStudentId((current) => (current === id ? null : id));
+
+  const handleToggleAddSubjectForm = () => {
+    if (!showAddSubjectForm) {
+      setSubjectForm({ studentId: "", name: "", score: "" });
+    }
+    setShowAddSubjectForm(!showAddSubjectForm);
+  };
+
+  const subjectFormStudent = students.find(
+    (s) => String(s.id) === String(subjectForm.studentId),
+  );
+  const subjectOptions = getSubjectsForLevel(
+    subjectFormStudent?.category || "Preschool",
+  );
+
+  const handleAddSubject = (event) => {
+    event.preventDefault();
+    if (!subjectForm.studentId || !subjectForm.name) return;
+
+    addStudentSubject(subjectForm.studentId, {
+      name: subjectForm.name,
+      score: Number(subjectForm.score) || 0,
+    });
+
+    setSubjectForm({ studentId: "", name: "", score: "" });
+    setShowAddSubjectForm(false);
+  };
+
+  const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
   const handleLogout = () => {
     logout();
@@ -247,6 +298,90 @@ const TeacherDashboard = () => {
                 <button type="submit" className="action-btn primary">
                   Add Student
                 </button>
+                <button
+                  className="action-btn primary"
+                  onClick={handleToggleAddSubjectForm}
+                  style={{ marginLeft: "10px" }}
+                >
+                  {showAddSubjectForm ? "Cancel" : "Add Subject"}
+                </button>
+                {showAddSubjectForm && (
+                  <form className="inline-form" onSubmit={handleAddSubject}>
+                    <div className="form-row">
+                      <div className="form-field">
+                        <label htmlFor="subjectStudent">Student</label>
+                        <select
+                          id="subjectStudent"
+                          className="select-field"
+                          value={subjectForm.studentId}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              studentId: e.target.value,
+                              name: "",
+                            })
+                          }
+                          required
+                        >
+                          <option value="">Select student</option>
+                          {students.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.category || "Preschool"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="subjectName">Subject</label>
+                        <select
+                          id="subjectName"
+                          className="select-field"
+                          value={subjectForm.name}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              name: e.target.value,
+                            })
+                          }
+                          disabled={!subjectForm.studentId}
+                          required
+                        >
+                          <option value="">Select subject</option>
+                          {subjectOptions.map((subject) => (
+                            <option key={subject} value={subject}>
+                              {subject}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="subjectScore">Score</label>
+                        <input
+                          id="subjectScore"
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="input-field"
+                          value={subjectForm.score}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              score: e.target.value,
+                            })
+                          }
+                          placeholder="0-100"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="action-btn primary"
+                      disabled={!subjectForm.studentId}
+                    >
+                      Add Subject
+                    </button>
+                  </form>
+                )}
               </form>
             )}
 
@@ -271,7 +406,54 @@ const TeacherDashboard = () => {
                   {students.map((student) => (
                     <tr key={student.id}>
                       <td>{student.id}</td>
-                      <td>{student.name}</td>
+                      <td>
+                        <button
+                          className="entity-name-link"
+                          onClick={() => handleStudentClick(student.id)}
+                        >
+                          {student.name}
+                        </button>
+                      </td>
+                      {selectedStudent && (
+                        <div className="detail-panel">
+                          <div className="detail-panel-header">
+                            <h3>{selectedStudent.name}</h3>
+                            <span>
+                              {selectedStudent.category} •{" "}
+                              {selectedStudent.class}
+                            </span>
+                          </div>
+                          <div className="detail-grid">
+                            <div className="detail-card">
+                              <h4>Subjects</h4>
+                              <ul className="detail-list">
+                                {(selectedStudent.subjects || []).map(
+                                  (subject) => (
+                                    <li key={subject.name}>
+                                      <span>{subject.name}</span>
+                                      <strong>{subject.score}%</strong>
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
+                            </div>
+                            <div className="detail-card">
+                              <h4>Performance</h4>
+                              <p>
+                                <strong>Average:</strong>{" "}
+                                {averageOf(selectedStudent.subjects).toFixed(1)}
+                                %
+                              </p>
+                              <p>
+                                <strong>Grade:</strong>{" "}
+                                {scoreToGrade(
+                                  averageOf(selectedStudent.subjects),
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <td>
                         <span
                           style={{

@@ -1,11 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getSubjectsForLevel,
+  scoreToGrade,
+  averageOf,
+} from "../components/Subjects";
 import { useAuth } from "../context/useAuth";
 import "./Dashboard.css";
 
 const AdminDashboard = () => {
-  const { logout, user, schoolData, addSchoolEntity, removeSchoolEntity } =
-    useAuth();
+  const {
+    logout,
+    user,
+    schoolData,
+    addSchoolEntity,
+    removeSchoolEntity,
+    addStudentSubject,
+  } = useAuth();
+  useAuth();
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -13,6 +26,12 @@ const AdminDashboard = () => {
   const [selectedStudentCategory, setSelectedStudentCategory] = useState("All");
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
+  const [showAddSubjectForm, setShowAddSubjectForm] = useState(false);
+  const [subjectForm, setSubjectForm] = useState({
+    studentId: "",
+    name: "",
+    score: "",
+  });
   const [entityForm, setEntityForm] = useState({
     name: "",
     subject: "",
@@ -120,6 +139,33 @@ const AdminDashboard = () => {
     setShowAddForm(false);
   };
 
+  const handleToggleAddSubjectForm = () => {
+    if (!showAddSubjectForm) {
+      setSubjectForm({ studentId: "", name: "", score: "" });
+    }
+    setShowAddSubjectForm(!showAddSubjectForm);
+  };
+
+  const subjectFormStudent = students.find(
+    (s) => String(s.id) === String(subjectForm.studentId),
+  );
+  const subjectOptions = getSubjectsForLevel(
+    subjectFormStudent?.category || "Preschool",
+  );
+
+  const handleAddSubject = (event) => {
+    event.preventDefault();
+    if (!subjectForm.studentId || !subjectForm.name) return;
+
+    addStudentSubject(subjectForm.studentId, {
+      name: subjectForm.name,
+      score: Number(subjectForm.score) || 0,
+    });
+
+    setSubjectForm({ studentId: "", name: "", score: "" });
+    setShowAddSubjectForm(false);
+  };
+
   const handleRemoveEntity = (id) => {
     removeSchoolEntity(activeTab, id);
   };
@@ -206,6 +252,90 @@ const AdminDashboard = () => {
                   }
                   placeholder="A1, B2, C3"
                 />
+                <button
+                  className="action-btn primary"
+                  onClick={handleToggleAddSubjectForm}
+                  style={{ marginLeft: "10px" }}
+                >
+                  {showAddSubjectForm ? "Cancel" : "Add Subject"}
+                </button>
+                {showAddSubjectForm && (
+                  <form className="inline-form" onSubmit={handleAddSubject}>
+                    <div className="form-row">
+                      <div className="form-field">
+                        <label htmlFor="subjectStudent">Student</label>
+                        <select
+                          id="subjectStudent"
+                          className="select-field"
+                          value={subjectForm.studentId}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              studentId: e.target.value,
+                              name: "",
+                            })
+                          }
+                          required
+                        >
+                          <option value="">Select student</option>
+                          {students.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.category || "Preschool"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="subjectName">Subject</label>
+                        <select
+                          id="subjectName"
+                          className="select-field"
+                          value={subjectForm.name}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              name: e.target.value,
+                            })
+                          }
+                          disabled={!subjectForm.studentId}
+                          required
+                        >
+                          <option value="">Select subject</option>
+                          {subjectOptions.map((subject) => (
+                            <option key={subject} value={subject}>
+                              {subject}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="subjectScore">Score</label>
+                        <input
+                          id="subjectScore"
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="input-field"
+                          value={subjectForm.score}
+                          onChange={(e) =>
+                            setSubjectForm({
+                              ...subjectForm,
+                              score: e.target.value,
+                            })
+                          }
+                          placeholder="0-100"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="action-btn primary"
+                      disabled={!subjectForm.studentId}
+                    >
+                      Add Subject
+                    </button>
+                  </form>
+                )}
               </div>
               <div className="form-field">
                 <label htmlFor="entityFee">School Fee</label>
@@ -576,13 +706,13 @@ const AdminDashboard = () => {
                     <h4>Performance</h4>
                     <p>
                       <strong>Average:</strong>{" "}
-                      {selectedStudent.performance.averageScore}%
+                      {averageOf(selectedStudent.subjects).toFixed(1)}%
                     </p>
                     <p>
                       <strong>Grade:</strong>{" "}
-                      {selectedStudent.performance.grade}
+                      {scoreToGrade(averageOf(selectedStudent.subjects))}
                     </p>
-                    <p>{selectedStudent.performance.remark}</p>
+                    <p>{selectedStudent.performance?.remark}</p>
                   </div>
                 </div>
               </div>

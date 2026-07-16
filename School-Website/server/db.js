@@ -60,6 +60,16 @@ const verifyPassword = (password, storedHash) => {
   return crypto.timingSafeEqual(candidateHash, storedHashBuffer);
 };
 
+// Kept in sync with src/constants/subjects.js scoreToGrade - duplicated
+// here since db.js can't import from src/ (separate build contexts).
+const scoreToGrade = (score) => {
+  if (score >= 80) return "A";
+  if (score >= 70) return "B";
+  if (score >= 60) return "C";
+  if (score >= 50) return "D";
+  return "E";
+};
+
 const seedData = {
   students: [
     {
@@ -581,6 +591,62 @@ export const createSchoolEntity = async (entityType, payload = {}) => {
           ? "Finance"
           : "Preschool"),
   });
+
+  return getSchoolData();
+};
+
+export const addStudentSubject = async (studentId, subject = {}) => {
+  const subjectName = subject.name?.trim();
+  if (!subjectName) {
+    throw new Error("A subject name is required.");
+  }
+
+  const score = Number(subject.score);
+  if (Number.isNaN(score) || score < 0 || score > 100) {
+    throw new Error("Score must be a number between 0 and 100.");
+  }
+
+  const student = await get("SELECT * FROM students WHERE id = ?;", [
+    studentId,
+  ]);
+  if (!student) {
+    throw new Error("Student not found.");
+  }
+
+  const subjects = JSON.parse(student.subjects || "[]");
+  const existingIndex = subjects.findIndex((s) => s.name === subjectName);
+
+  if (existingIndex >= 0) {
+    // Replace the score if the subject already exists, rather than
+    // creating a duplicate entry.
+    subjects[existingIndex] = { name: subjectName, score };
+  } else {
+    subjects.push({ name: subjectName, score });
+  }
+
+  const averageScore =
+    subjects.reduce((sum, s) => sum + Number(s.score || 0), 0) /
+    subjects.length;
+  const grade = scoreToGrade(averageScore);
+
+  const performance = {
+    ...JSON.parse(student.performance || "{}"),
+    averageScore,
+    grade,
+  };
+
+  await run(
+    `UPDATE students
+     SET subjects = ?, performance = ?, marks = ?, grade = ?
+     WHERE id = ?;`,
+    [
+      JSON.stringify(subjects),
+      JSON.stringify(performance),
+      averageScore,
+      grade,
+      studentId,
+    ],
+  );
 
   return getSchoolData();
 };

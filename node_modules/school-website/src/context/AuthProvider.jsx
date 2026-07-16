@@ -261,6 +261,32 @@ export const AuthProvider = ({ children }) => {
       // keep the UI responsive even if the backend is temporarily unavailable
     }
   };
+  const addStudentSubject = async (studentId, subject) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/school-data/students/${studentId}/subjects`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(subject), // { name, score }
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to add subject");
+      }
+
+      const result = await response.json();
+      if (result?.data) {
+        setSchoolData(result.data);
+      }
+    } catch {
+      // keep the UI responsive even if the backend is temporarily unavailable
+    }
+  };
 
   const removeSchoolEntity = async (entityType, id) => {
     try {
@@ -294,6 +320,7 @@ export const AuthProvider = ({ children }) => {
       schoolData,
       addSchoolEntity,
       removeSchoolEntity,
+      addStudentSubject,
     }),
     [session, schoolData],
   );
