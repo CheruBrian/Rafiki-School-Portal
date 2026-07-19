@@ -8,6 +8,8 @@ import {
 } from "../components/Subjects";
 import "./Dashboard.css";
 
+const emptySubjectEntry = () => ({ name: "", score: "" });
+
 const TeacherDashboard = () => {
   const {
     logout,
@@ -17,18 +19,17 @@ const TeacherDashboard = () => {
     removeSchoolEntity,
     addStudentSubject,
   } = useAuth();
-  // ...
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [showAddSubjectForm, setShowAddSubjectForm] = useState(false);
-  const [subjectForm, setSubjectForm] = useState({
-    studentId: "",
-    name: "",
-    score: "",
-  });
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("students");
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [showAddSubjectForm, setShowAddSubjectForm] = useState(false);
+  const [subjectForm, setSubjectForm] = useState({
+    studentId: "",
+    entries: [emptySubjectEntry()],
+  });
+  const [subjectSubmitting, setSubjectSubmitting] = useState(false);
   const [newStudent, setNewStudent] = useState({
     name: "",
     grade: "",
@@ -79,9 +80,12 @@ const TeacherDashboard = () => {
   const handleStudentClick = (id) =>
     setSelectedStudentId((current) => (current === id ? null : id));
 
+  // --- Subject form (supports adding several subjects for one student
+  // in a single submission) ---
+
   const handleToggleAddSubjectForm = () => {
     if (!showAddSubjectForm) {
-      setSubjectForm({ studentId: "", name: "", score: "" });
+      setSubjectForm({ studentId: "", entries: [emptySubjectEntry()] });
     }
     setShowAddSubjectForm(!showAddSubjectForm);
   };
@@ -93,16 +97,64 @@ const TeacherDashboard = () => {
     subjectFormStudent?.category || "Preschool",
   );
 
-  const handleAddSubject = (event) => {
-    event.preventDefault();
-    if (!subjectForm.studentId || !subjectForm.name) return;
+  const handleSubjectStudentChange = (studentId) => {
+    setSubjectForm({ studentId, entries: [emptySubjectEntry()] });
+  };
 
-    addStudentSubject(subjectForm.studentId, {
-      name: subjectForm.name,
-      score: Number(subjectForm.score) || 0,
+  const handleSubjectEntryChange = (index, field, value) => {
+    setSubjectForm((prev) => {
+      const entries = prev.entries.map((entry, i) =>
+        i === index ? { ...entry, [field]: value } : entry,
+      );
+      return { ...prev, entries };
     });
+  };
 
-    setSubjectForm({ studentId: "", name: "", score: "" });
+  const handleAddSubjectRow = () => {
+    setSubjectForm((prev) => ({
+      ...prev,
+      entries: [...prev.entries, emptySubjectEntry()],
+    }));
+  };
+
+  const handleRemoveSubjectRow = (index) => {
+    setSubjectForm((prev) => ({
+      ...prev,
+      entries: prev.entries.filter((_, i) => i !== index),
+    }));
+  };
+
+  const subjectOptionsForRow = (rowIndex) => {
+    const chosenElsewhere = subjectForm.entries
+      .filter((_, i) => i !== rowIndex)
+      .map((entry) => entry.name)
+      .filter(Boolean);
+    return subjectOptions.filter((s) => !chosenElsewhere.includes(s));
+  };
+
+  const canAddMoreSubjectRows =
+    subjectForm.entries.length < subjectOptions.length;
+
+  const handleAddSubject = async (event) => {
+    event.preventDefault();
+    if (!subjectForm.studentId) return;
+
+    const validEntries = subjectForm.entries.filter((entry) => entry.name);
+    if (validEntries.length === 0) return;
+
+    setSubjectSubmitting(true);
+    try {
+      for (const entry of validEntries) {
+        await addStudentSubject(subjectForm.studentId, {
+          name: entry.name,
+          score: Number(entry.score) || 0,
+        });
+      }
+    } finally {
+      setSubjectSubmitting(false);
+    }
+
+    setSubjectForm({ studentId: "", entries: [emptySubjectEntry()] });
     setShowAddSubjectForm(false);
   };
 
@@ -222,13 +274,25 @@ const TeacherDashboard = () => {
                   <strong>Average Marks:</strong> {avgGrade.toFixed(1)}
                 </p>
               </div>
-              <button
-                className="action-btn primary"
-                onClick={() => setShowAddForm(!showAddForm)}
-              >
-                {showAddForm ? "Cancel" : "Add Student"}
-              </button>
+              <div>
+                <button
+                  type="button"
+                  className="action-btn primary"
+                  onClick={() => setShowAddForm(!showAddForm)}
+                >
+                  {showAddForm ? "Cancel" : "Add Student"}
+                </button>
+                <button
+                  type="button"
+                  className="action-btn primary"
+                  onClick={handleToggleAddSubjectForm}
+                  style={{ marginLeft: "10px" }}
+                >
+                  {showAddSubjectForm ? "Cancel" : "Add Subject"}
+                </button>
+              </div>
             </div>
+
             {showAddForm && (
               <form className="inline-form" onSubmit={handleAddStudent}>
                 <div className="form-row">
@@ -298,90 +362,109 @@ const TeacherDashboard = () => {
                 <button type="submit" className="action-btn primary">
                   Add Student
                 </button>
-                <button
-                  className="action-btn primary"
-                  onClick={handleToggleAddSubjectForm}
-                  style={{ marginLeft: "10px" }}
-                >
-                  {showAddSubjectForm ? "Cancel" : "Add Subject"}
-                </button>
-                {showAddSubjectForm && (
-                  <form className="inline-form" onSubmit={handleAddSubject}>
-                    <div className="form-row">
-                      <div className="form-field">
-                        <label htmlFor="subjectStudent">Student</label>
-                        <select
-                          id="subjectStudent"
-                          className="select-field"
-                          value={subjectForm.studentId}
-                          onChange={(e) =>
-                            setSubjectForm({
-                              ...subjectForm,
-                              studentId: e.target.value,
-                              name: "",
-                            })
-                          }
-                          required
-                        >
-                          <option value="">Select student</option>
-                          {students.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} ({s.category || "Preschool"})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="form-field">
-                        <label htmlFor="subjectName">Subject</label>
-                        <select
-                          id="subjectName"
-                          className="select-field"
-                          value={subjectForm.name}
-                          onChange={(e) =>
-                            setSubjectForm({
-                              ...subjectForm,
-                              name: e.target.value,
-                            })
-                          }
-                          disabled={!subjectForm.studentId}
-                          required
-                        >
-                          <option value="">Select subject</option>
-                          {subjectOptions.map((subject) => (
-                            <option key={subject} value={subject}>
-                              {subject}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="form-field">
-                        <label htmlFor="subjectScore">Score</label>
-                        <input
-                          id="subjectScore"
-                          type="number"
-                          min="0"
-                          max="100"
-                          className="input-field"
-                          value={subjectForm.score}
-                          onChange={(e) =>
-                            setSubjectForm({
-                              ...subjectForm,
-                              score: e.target.value,
-                            })
-                          }
-                          placeholder="0-100"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      className="action-btn primary"
-                      disabled={!subjectForm.studentId}
+              </form>
+            )}
+
+            {showAddSubjectForm && (
+              <form className="inline-form" onSubmit={handleAddSubject}>
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="subjectStudent">Student</label>
+                    <select
+                      id="subjectStudent"
+                      className="select-field"
+                      value={subjectForm.studentId}
+                      onChange={(e) =>
+                        handleSubjectStudentChange(e.target.value)
+                      }
+                      required
                     >
-                      Add Subject
-                    </button>
-                  </form>
-                )}
+                      <option value="">Select student</option>
+                      {students.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} ({s.category || "Preschool"})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {subjectForm.entries.map((entry, index) => (
+                  <div className="form-row" key={index}>
+                    <div className="form-field">
+                      <label htmlFor={`subjectName-${index}`}>Subject</label>
+                      <select
+                        id={`subjectName-${index}`}
+                        className="select-field"
+                        value={entry.name}
+                        onChange={(e) =>
+                          handleSubjectEntryChange(
+                            index,
+                            "name",
+                            e.target.value,
+                          )
+                        }
+                        disabled={!subjectForm.studentId}
+                        required
+                      >
+                        <option value="">Select subject</option>
+                        {subjectOptionsForRow(index).map((subject) => (
+                          <option key={subject} value={subject}>
+                            {subject}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label htmlFor={`subjectScore-${index}`}>Score</label>
+                      <input
+                        id={`subjectScore-${index}`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        className="input-field"
+                        value={entry.score}
+                        onChange={(e) =>
+                          handleSubjectEntryChange(
+                            index,
+                            "score",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="0-100"
+                      />
+                    </div>
+                    {subjectForm.entries.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-remove"
+                        onClick={() => handleRemoveSubjectRow(index)}
+                        style={{ alignSelf: "flex-end" }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                <div className="form-row">
+                  <button
+                    type="button"
+                    className="action-btn"
+                    onClick={handleAddSubjectRow}
+                    disabled={!subjectForm.studentId || !canAddMoreSubjectRows}
+                  >
+                    + Add another subject
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  className="action-btn primary"
+                  disabled={!subjectForm.studentId || subjectSubmitting}
+                >
+                  {subjectSubmitting ? "Saving…" : "Save Subjects"}
+                </button>
               </form>
             )}
 
@@ -414,46 +497,6 @@ const TeacherDashboard = () => {
                           {student.name}
                         </button>
                       </td>
-                      {selectedStudent && (
-                        <div className="detail-panel">
-                          <div className="detail-panel-header">
-                            <h3>{selectedStudent.name}</h3>
-                            <span>
-                              {selectedStudent.category} •{" "}
-                              {selectedStudent.class}
-                            </span>
-                          </div>
-                          <div className="detail-grid">
-                            <div className="detail-card">
-                              <h4>Subjects</h4>
-                              <ul className="detail-list">
-                                {(selectedStudent.subjects || []).map(
-                                  (subject) => (
-                                    <li key={subject.name}>
-                                      <span>{subject.name}</span>
-                                      <strong>{subject.score}%</strong>
-                                    </li>
-                                  ),
-                                )}
-                              </ul>
-                            </div>
-                            <div className="detail-card">
-                              <h4>Performance</h4>
-                              <p>
-                                <strong>Average:</strong>{" "}
-                                {averageOf(selectedStudent.subjects).toFixed(1)}
-                                %
-                              </p>
-                              <p>
-                                <strong>Grade:</strong>{" "}
-                                {scoreToGrade(
-                                  averageOf(selectedStudent.subjects),
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                       <td>
                         <span
                           style={{
@@ -495,6 +538,41 @@ const TeacherDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {selectedStudent && (
+              <div className="detail-panel">
+                <div className="detail-panel-header">
+                  <h3>{selectedStudent.name}</h3>
+                  <span>
+                    {selectedStudent.category} • {selectedStudent.class}
+                  </span>
+                </div>
+                <div className="detail-grid">
+                  <div className="detail-card">
+                    <h4>Subjects</h4>
+                    <ul className="detail-list">
+                      {(selectedStudent.subjects || []).map((subject) => (
+                        <li key={subject.name}>
+                          <span>{subject.name}</span>
+                          <strong>{subject.score}%</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="detail-card">
+                    <h4>Performance</h4>
+                    <p>
+                      <strong>Average:</strong>{" "}
+                      {averageOf(selectedStudent.subjects).toFixed(1)}%
+                    </p>
+                    <p>
+                      <strong>Grade:</strong>{" "}
+                      {scoreToGrade(averageOf(selectedStudent.subjects))}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}

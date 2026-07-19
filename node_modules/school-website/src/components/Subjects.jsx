@@ -1,4 +1,4 @@
-// Subject sets grouped by grade level. Preschool, Lower Primary, and JSS
+// Subject sets grouped by grade level. Preschool, Primary, and JSS
 // share the same curriculum; SSS has its own broader subject list.
 export const SUBJECTS_BY_LEVEL = {
   Preschool: [
@@ -8,13 +8,7 @@ export const SUBJECTS_BY_LEVEL = {
     "Social Studies",
     "English",
   ],
-  "Lower Primary": [
-    "Mathematics",
-    "Science",
-    "Kiswahili",
-    "Social Studies",
-    "English",
-  ],
+  Primary: ["Mathematics", "Science", "Kiswahili", "Social Studies", "English"],
   JSS: ["Mathematics", "Science", "Kiswahili", "Social Studies", "English"],
   SSS: [
     "English",

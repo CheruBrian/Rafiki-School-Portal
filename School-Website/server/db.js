@@ -93,7 +93,7 @@ const seedData = {
       id: 2,
       name: "Jane Smith",
       class: "B2",
-      category: "Lower Primary",
+      category: "Primary",
       fee: 5000,
       paid: 5000,
       balance: 0,

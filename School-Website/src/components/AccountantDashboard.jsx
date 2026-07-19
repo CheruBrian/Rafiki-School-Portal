@@ -14,7 +14,7 @@ const AccountantDashboard = () => {
   };
 
   const students = schoolData.students || [];
-  const categories = ["All", "Preschool", "Lower Primary", "JSS", "SSS"];
+  const categories = ["All", "Preschool", "Primary", "JSS", "SSS"];
 
   const filteredStudents =
     filterCategory === "All"
