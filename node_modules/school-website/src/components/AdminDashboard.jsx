@@ -44,7 +44,7 @@ const AdminDashboard = () => {
     category: "Preschool",
   });
 
-  const gradeLevels = ["Preschool", "Lower Primary", "JSS", "SSS"];
+  const gradeLevels = ["Preschool", "Primary", "JSS", "SSS"];
   const {
     students = [],
     teachers = [],
