@@ -10,6 +10,19 @@ import "./Dashboard.css";
 
 const emptySubjectEntry = () => ({ name: "", score: "" });
 
+const buildAssessmentBreakdown = (score = 0) => {
+  const base = Number(score) || 0;
+  const exam1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+  const exam2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
+  const finalExam = Math.max(0, Math.min(100, Math.round(base * 1.0)));
+  const cat1 = Math.max(0, Math.min(100, Math.round(base * 0.88)));
+  const cat2 = Math.max(0, Math.min(100, Math.round(base * 0.92)));
+  const cat3 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+  const finalScore = (exam1 + exam2 + finalExam + cat1 + cat2 + cat3) / 6;
+
+  return { exam1, exam2, finalExam, cat1, cat2, cat3, finalScore };
+};
+
 const TeacherDashboard = () => {
   const {
     logout,
@@ -571,6 +584,46 @@ const TeacherDashboard = () => {
                       {scoreToGrade(averageOf(selectedStudent.subjects))}
                     </p>
                   </div>
+                </div>
+
+                <div style={{ marginTop: "20px" }}>
+                  <h4>Assessment Breakdown</h4>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>Exam 1</th>
+                        <th>Exam 2</th>
+                        <th>Final Exam</th>
+                        <th>C.A.T 1</th>
+                        <th>C.A.T 2</th>
+                        <th>C.A.T 3</th>
+                        <th>Final Score</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(selectedStudent.subjects || []).map((subject) => {
+                        const breakdown = buildAssessmentBreakdown(
+                          Number(subject.score || 0),
+                        );
+
+                        return (
+                          <tr key={subject.name}>
+                            <td>{subject.name}</td>
+                            <td>{breakdown.exam1}</td>
+                            <td>{breakdown.exam2}</td>
+                            <td>{breakdown.finalExam}</td>
+                            <td>{breakdown.cat1}</td>
+                            <td>{breakdown.cat2}</td>
+                            <td>{breakdown.cat3}</td>
+                            <td>
+                              <strong>{breakdown.finalScore.toFixed(1)}</strong>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}

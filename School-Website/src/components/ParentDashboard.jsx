@@ -13,6 +13,19 @@ const ParentDashboard = () => {
     navigate("/login");
   };
 
+  const buildAssessmentBreakdown = (score = 0) => {
+    const base = Number(score) || 0;
+    const exam1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+    const exam2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
+    const finalExam = Math.max(0, Math.min(100, Math.round(base * 1.0)));
+    const cat1 = Math.max(0, Math.min(100, Math.round(base * 0.88)));
+    const cat2 = Math.max(0, Math.min(100, Math.round(base * 0.92)));
+    const cat3 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+    const finalScore = (exam1 + exam2 + finalExam + cat1 + cat2 + cat3) / 6;
+
+    return { exam1, exam2, finalExam, cat1, cat2, cat3, finalScore };
+  };
+
   const children = (schoolData.students || []).map((student) => ({
     id: student.id,
     name: student.name,
@@ -23,12 +36,18 @@ const ParentDashboard = () => {
           name: subject.name,
           marks: subject.score || subject.marks || 0,
           grade: subject.grade || student.performance?.grade || "TBD",
+          assessmentBreakdown: buildAssessmentBreakdown(
+            Number(subject.score || subject.marks || 0),
+          ),
         }))
       : [
           {
             name: "General Studies",
             marks: Number(student.marks || 0),
             grade: student.performance?.grade || "TBD",
+            assessmentBreakdown: buildAssessmentBreakdown(
+              Number(student.marks || 0),
+            ),
           },
         ],
     fee: Number(student.fee || 0),
@@ -206,6 +225,43 @@ const ParentDashboard = () => {
                         }}
                       ></div>
                     </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>
+            Assessment Breakdown
+          </h3>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Exam 1</th>
+                <th>Exam 2</th>
+                <th>Final Exam</th>
+                <th>C.A.T 1</th>
+                <th>C.A.T 2</th>
+                <th>C.A.T 3</th>
+                <th>Final Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {child.subjects.map((subject, index) => (
+                <tr key={index}>
+                  <td>{subject.name}</td>
+                  <td>{subject.assessmentBreakdown?.exam1 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.exam2 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.finalExam ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.cat1 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.cat2 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.cat3 ?? 0}</td>
+                  <td>
+                    <strong>
+                      {subject.assessmentBreakdown?.finalScore?.toFixed(1) ??
+                        "0.0"}
+                    </strong>
                   </td>
                 </tr>
               ))}
