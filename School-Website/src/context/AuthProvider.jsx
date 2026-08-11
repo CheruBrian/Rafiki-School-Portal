@@ -145,6 +145,7 @@ const createDefaultSchoolData = () => ({
 const getInitialSchoolData = () => createDefaultSchoolData();
 
 const AUTH_STORAGE_KEY = "rafiki_auth_session";
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
 const getStoredSession = () => {
   try {
@@ -161,6 +162,63 @@ export const AuthProvider = ({ children }) => {
   const token = session?.token ?? null;
   const isAuthenticated = !!session;
   const [schoolData, setSchoolData] = useState(getInitialSchoolData);
+
+  const logout = () => {
+    if (token) {
+      fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {
+        // best-effort - clear the local session regardless
+      });
+    }
+    setSession(null);
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (!session) return;
+
+    let timerId;
+    const resetInactivityTimer = () => {
+      if (timerId) {
+        clearTimeout(timerId);
+      }
+      timerId = window.setTimeout(() => {
+        logout();
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const activityEvents = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, {
+        passive: true,
+      });
+    });
+
+    resetInactivityTimer();
+
+    return () => {
+      if (timerId) {
+        clearTimeout(timerId);
+      }
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, resetInactivityTimer);
+      });
+    };
+  }, [session, token]);
 
   useEffect(() => {
     const loadSchoolData = async () => {
@@ -209,23 +267,6 @@ export const AuthProvider = ({ children }) => {
         success: false,
         error: "Unable to reach the server. Please try again.",
       };
-    }
-  };
-
-  const logout = () => {
-    if (token) {
-      fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => {
-        // best-effort - clear the local session regardless
-      });
-    }
-    setSession(null);
-    try {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch {
-      // ignore
     }
   };
 
