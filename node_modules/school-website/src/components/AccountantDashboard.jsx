@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import ProfileMenu from "./ProfileMenu";
 import "./Dashboard.css";
 
 const AccountantDashboard = () => {
@@ -43,9 +44,11 @@ const AccountantDashboard = () => {
         <h1>Accountant Dashboard</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+          <ProfileMenu
+            userName={user?.name || "Accountant"}
+            onLogout={handleLogout}
+            onEditProfile={() => {}}
+          />
         </div>
       </header>
 

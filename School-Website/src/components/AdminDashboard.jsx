@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ProfileMenu from "./ProfileMenu";
 import {
   getSubjectsForLevel,
   scoreToGrade,
@@ -523,9 +524,11 @@ const AdminDashboard = () => {
           >
             SQL Client
           </button>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+          <ProfileMenu
+            userName={user?.name || "Admin"}
+            onLogout={handleLogout}
+            onEditProfile={() => {}}
+          />
         </div>
       </header>
 

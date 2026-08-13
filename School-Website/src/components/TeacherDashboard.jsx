@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import ProfileMenu from "./ProfileMenu";
 import {
   getSubjectsForLevel,
   scoreToGrade,
@@ -38,6 +39,8 @@ const TeacherDashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [showAddSubjectForm, setShowAddSubjectForm] = useState(false);
+  const [isEditingResults, setIsEditingResults] = useState(false);
+  const [editedResults, setEditedResults] = useState({});
   const [subjectForm, setSubjectForm] = useState({
     studentId: "",
     entries: [emptySubjectEntry()],
@@ -155,13 +158,24 @@ const TeacherDashboard = () => {
     const validEntries = subjectForm.entries.filter((entry) => entry.name);
     if (validEntries.length === 0) return;
 
+    const targetStudents =
+      subjectForm.studentId === "all"
+        ? students
+        : students.filter(
+            (student) => String(student.id) === String(subjectForm.studentId),
+          );
+
+    if (targetStudents.length === 0) return;
+
     setSubjectSubmitting(true);
     try {
-      for (const entry of validEntries) {
-        await addStudentSubject(subjectForm.studentId, {
-          name: entry.name,
-          score: Number(entry.score) || 0,
-        });
+      for (const student of targetStudents) {
+        for (const entry of validEntries) {
+          await addStudentSubject(student.id, {
+            name: entry.name,
+            score: Number(entry.score) || 0,
+          });
+        }
       }
     } finally {
       setSubjectSubmitting(false);
@@ -172,6 +186,23 @@ const TeacherDashboard = () => {
   };
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
+
+  const getSubjectScoreValue = (subject) => {
+    const rawValue = editedResults[subject.name];
+    if (rawValue !== undefined && rawValue !== "") {
+      return Number(rawValue) || 0;
+    }
+    return Number(subject.score ?? 0);
+  };
+
+  const handleResultScoreChange = (subjectName, value) => {
+    setEditedResults((prev) => ({ ...prev, [subjectName]: value }));
+  };
+
+  const handleResultsCancel = () => {
+    setEditedResults({});
+    setIsEditingResults(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -248,9 +279,11 @@ const TeacherDashboard = () => {
         <h1>Teacher Dashboard</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+          <ProfileMenu
+            userName={user?.name || "Teacher"}
+            onLogout={handleLogout}
+            onEditProfile={() => {}}
+          />
         </div>
       </header>
 
@@ -393,6 +426,7 @@ const TeacherDashboard = () => {
                       required
                     >
                       <option value="">Select student</option>
+                      <option value="all">All students in class</option>
                       {students.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name} ({s.category || "Preschool"})
@@ -587,35 +621,96 @@ const TeacherDashboard = () => {
                 </div>
 
                 <div style={{ marginTop: "20px" }}>
-                  <h4>Assessment Breakdown</h4>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "12px",
+                      gap: "12px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <h4 style={{ margin: 0 }}>Assessment Breakdown</h4>
+                    {!isEditingResults ? (
+                      <button
+                        type="button"
+                        className="action-btn primary"
+                        onClick={() => setIsEditingResults(true)}
+                      >
+                        Edit results
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button
+                          type="button"
+                          className="action-btn primary"
+                          onClick={() => setIsEditingResults(false)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-remove"
+                          onClick={handleResultsCancel}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <table className="data-table">
                     <thead>
                       <tr>
                         <th>Subject</th>
+                        <th>C.A.T 1</th>
                         <th>Exam 1</th>
+                        <th>C.A.T 2</th>
                         <th>Exam 2</th>
                         <th>Final Exam</th>
-                        <th>C.A.T 1</th>
-                        <th>C.A.T 2</th>
-                        <th>C.A.T 3</th>
-                        <th>Final Score</th>
+                        <th>Average Score</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(selectedStudent.subjects || []).map((subject) => {
-                        const breakdown = buildAssessmentBreakdown(
-                          Number(subject.score || 0),
-                        );
+                        const score = getSubjectScoreValue(subject);
+                        const breakdown = buildAssessmentBreakdown(score);
 
                         return (
                           <tr key={subject.name}>
                             <td>{subject.name}</td>
+                            <td>
+                              {isEditingResults ? (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={
+                                    editedResults[subject.name] ??
+                                    Number(subject.score ?? 0)
+                                  }
+                                  onChange={(e) =>
+                                    handleResultScoreChange(
+                                      subject.name,
+                                      e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    width: "70px",
+                                    padding: "6px 8px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #d8dee7",
+                                  }}
+                                />
+                              ) : (
+                                breakdown.cat1
+                              )}
+                            </td>
                             <td>{breakdown.exam1}</td>
+                            <td>{breakdown.cat2}</td>
                             <td>{breakdown.exam2}</td>
                             <td>{breakdown.finalExam}</td>
-                            <td>{breakdown.cat1}</td>
-                            <td>{breakdown.cat2}</td>
-                            <td>{breakdown.cat3}</td>
                             <td>
                               <strong>{breakdown.finalScore.toFixed(1)}</strong>
                             </td>

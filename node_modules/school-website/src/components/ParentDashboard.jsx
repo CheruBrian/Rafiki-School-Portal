@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import ProfileMenu from "./ProfileMenu";
 import "./Dashboard.css";
 
 const ParentDashboard = () => {
@@ -85,9 +86,11 @@ const ParentDashboard = () => {
         <h1>Parent Portal</h1>
         <div className="user-info">
           <span>Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+          <ProfileMenu
+            userName={user?.name || "Parent"}
+            onLogout={handleLogout}
+            onEditProfile={() => {}}
+          />
         </div>
       </header>
 
@@ -238,25 +241,23 @@ const ParentDashboard = () => {
             <thead>
               <tr>
                 <th>Subject</th>
+                <th>C.A.T 1</th>
                 <th>Exam 1</th>
+                <th>C.A.T 2</th>
                 <th>Exam 2</th>
                 <th>Final Exam</th>
-                <th>C.A.T 1</th>
-                <th>C.A.T 2</th>
-                <th>C.A.T 3</th>
-                <th>Final Score</th>
+                <th>Average Score</th>
               </tr>
             </thead>
             <tbody>
               {child.subjects.map((subject, index) => (
                 <tr key={index}>
                   <td>{subject.name}</td>
+                  <td>{subject.assessmentBreakdown?.cat1 ?? 0}</td>
                   <td>{subject.assessmentBreakdown?.exam1 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.cat2 ?? 0}</td>
                   <td>{subject.assessmentBreakdown?.exam2 ?? 0}</td>
                   <td>{subject.assessmentBreakdown?.finalExam ?? 0}</td>
-                  <td>{subject.assessmentBreakdown?.cat1 ?? 0}</td>
-                  <td>{subject.assessmentBreakdown?.cat2 ?? 0}</td>
-                  <td>{subject.assessmentBreakdown?.cat3 ?? 0}</td>
                   <td>
                     <strong>
                       {subject.assessmentBreakdown?.finalScore?.toFixed(1) ??
