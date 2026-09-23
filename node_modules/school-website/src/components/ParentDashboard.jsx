@@ -16,15 +16,15 @@ const ParentDashboard = () => {
 
   const buildAssessmentBreakdown = (score = 0) => {
     const base = Number(score) || 0;
-    const exam1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
-    const exam2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
+    const assessment1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+    const assessment2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
     const finalExam = Math.max(0, Math.min(100, Math.round(base * 1.0)));
     const cat1 = Math.max(0, Math.min(100, Math.round(base * 0.88)));
     const cat2 = Math.max(0, Math.min(100, Math.round(base * 0.92)));
-    const cat3 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
-    const finalScore = (exam1 + exam2 + finalExam + cat1 + cat2 + cat3) / 6;
+    const finalScore =
+      (assessment1 + assessment2 + finalExam + cat1 + cat2) / 5;
 
-    return { exam1, exam2, finalExam, cat1, cat2, cat3, finalScore };
+    return { assessment1, assessment2, finalExam, cat1, cat2, finalScore };
   };
 
   const children = (schoolData.students || []).map((student) => ({
@@ -37,9 +37,11 @@ const ParentDashboard = () => {
           name: subject.name,
           marks: subject.score || subject.marks || 0,
           grade: subject.grade || student.performance?.grade || "TBD",
-          assessmentBreakdown: buildAssessmentBreakdown(
-            Number(subject.score || subject.marks || 0),
-          ),
+          assessmentBreakdown:
+            subject.assessments ||
+            buildAssessmentBreakdown(
+              Number(subject.score || subject.marks || 0),
+            ),
         }))
       : [
           {
@@ -242,9 +244,9 @@ const ParentDashboard = () => {
               <tr>
                 <th>Subject</th>
                 <th>C.A.T 1</th>
-                <th>Exam 1</th>
+                <th>Assessment 1</th>
                 <th>C.A.T 2</th>
-                <th>Exam 2</th>
+                <th>Assessment 2</th>
                 <th>Final Exam</th>
                 <th>Average Score</th>
               </tr>
@@ -254,9 +256,9 @@ const ParentDashboard = () => {
                 <tr key={index}>
                   <td>{subject.name}</td>
                   <td>{subject.assessmentBreakdown?.cat1 ?? 0}</td>
-                  <td>{subject.assessmentBreakdown?.exam1 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.assessment1 ?? 0}</td>
                   <td>{subject.assessmentBreakdown?.cat2 ?? 0}</td>
-                  <td>{subject.assessmentBreakdown?.exam2 ?? 0}</td>
+                  <td>{subject.assessmentBreakdown?.assessment2 ?? 0}</td>
                   <td>{subject.assessmentBreakdown?.finalExam ?? 0}</td>
                   <td>
                     <strong>

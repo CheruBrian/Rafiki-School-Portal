@@ -8,6 +8,7 @@ import {
   createSchoolEntity,
   deleteSchoolEntity,
   addStudentSubject,
+  updateStudentSubjectAssessments,
   verifyCredentials,
 } from "./db.js";
 
@@ -87,6 +88,22 @@ app.post("/api/school-data/students/:id/subjects", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+app.patch(
+  "/api/school-data/students/:id/subjects/:subjectName/assessments",
+  async (req, res) => {
+    try {
+      const schoolData = await updateStudentSubjectAssessments(
+        Number(req.params.id),
+        decodeURIComponent(req.params.subjectName),
+        req.body,
+      );
+      res.json({ ok: true, data: schoolData });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
 
 app.post("/api/query", async (req, res) => {
   const { databaseType, host, port, user, password, database, query } =

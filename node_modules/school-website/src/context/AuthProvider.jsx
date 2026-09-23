@@ -329,6 +329,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateStudentSubjectAssessments = async (
+    studentId,
+    subjectName,
+    assessments,
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/school-data/students/${studentId}/subjects/${encodeURIComponent(subjectName)}/assessments`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(assessments),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to save assessment scores");
+      }
+
+      const result = await response.json();
+      if (result?.data) {
+        setSchoolData(result.data);
+      }
+      return result?.data;
+    } catch {
+      return null;
+    }
+  };
+
   const removeSchoolEntity = async (entityType, id) => {
     try {
       const response = await fetch(
@@ -362,6 +394,7 @@ export const AuthProvider = ({ children }) => {
       addSchoolEntity,
       removeSchoolEntity,
       addStudentSubject,
+      updateStudentSubjectAssessments,
     }),
     [session, schoolData],
   );

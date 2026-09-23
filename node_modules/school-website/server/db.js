@@ -651,6 +651,92 @@ export const addStudentSubject = async (studentId, subject = {}) => {
   return getSchoolData();
 };
 
+export const updateStudentSubjectAssessments = async (
+  studentId,
+  subjectName,
+  assessments = {},
+) => {
+  const normalizedSubjectName = subjectName?.trim();
+  if (!normalizedSubjectName) {
+    throw new Error("A subject name is required.");
+  }
+
+  const student = await get("SELECT * FROM students WHERE id = ?;", [
+    studentId,
+  ]);
+  if (!student) {
+    throw new Error("Student not found.");
+  }
+
+  const subjects = JSON.parse(student.subjects || "[]");
+  const subjectIndex = subjects.findIndex(
+    (subject) => subject.name === normalizedSubjectName,
+  );
+  if (subjectIndex < 0) {
+    throw new Error("Subject not found.");
+  }
+
+  const currentSubject = subjects[subjectIndex];
+  const nextAssessments = {
+    cat1: Number(currentSubject.score || 0),
+    assessment1: Number(currentSubject.score || 0),
+    cat2: Number(currentSubject.score || 0),
+    assessment2: Number(currentSubject.score || 0),
+    finalExam: Number(currentSubject.score || 0),
+    ...(currentSubject.assessments || {}),
+    ...assessments,
+  };
+  const assessmentValues = [
+    nextAssessments.cat1,
+    nextAssessments.assessment1,
+    nextAssessments.cat2,
+    nextAssessments.assessment2,
+    nextAssessments.finalExam,
+  ].map(Number);
+
+  if (
+    assessmentValues.some(
+      (value) => Number.isNaN(value) || value < 0 || value > 100,
+    )
+  ) {
+    throw new Error("Assessment scores must be numbers between 0 and 100.");
+  }
+
+  const score =
+    assessmentValues.reduce((sum, value) => sum + value, 0) /
+    assessmentValues.length;
+  subjects[subjectIndex] = {
+    ...currentSubject,
+    score,
+    assessments: nextAssessments,
+  };
+
+  const averageScore =
+    subjects.reduce((sum, subject) => sum + Number(subject.score || 0), 0) /
+    subjects.length;
+  const grade = scoreToGrade(averageScore);
+  const performance = {
+    ...JSON.parse(student.performance || "{}"),
+    averageScore,
+    grade,
+  };
+
+  await run(
+    `UPDATE students
+     SET subjects = ?, performance = ?, marks = ?, grade = ?
+     WHERE id = ?;`,
+    [
+      JSON.stringify(subjects),
+      JSON.stringify(performance),
+      averageScore,
+      grade,
+      studentId,
+    ],
+  );
+
+  return getSchoolData();
+};
+
 export const deleteSchoolEntity = async (entityType, id) => {
   const entityMap = {
     students: { table: "students", role: "Student" },

@@ -13,15 +13,14 @@ const emptySubjectEntry = () => ({ name: "", score: "" });
 
 const buildAssessmentBreakdown = (score = 0) => {
   const base = Number(score) || 0;
-  const exam1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
-  const exam2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
+  const assessment1 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
+  const assessment2 = Math.max(0, Math.min(100, Math.round(base * 0.95)));
   const finalExam = Math.max(0, Math.min(100, Math.round(base * 1.0)));
   const cat1 = Math.max(0, Math.min(100, Math.round(base * 0.88)));
   const cat2 = Math.max(0, Math.min(100, Math.round(base * 0.92)));
-  const cat3 = Math.max(0, Math.min(100, Math.round(base * 0.9)));
-  const finalScore = (exam1 + exam2 + finalExam + cat1 + cat2 + cat3) / 6;
+  const finalScore = (assessment1 + assessment2 + finalExam + cat1 + cat2) / 5;
 
-  return { exam1, exam2, finalExam, cat1, cat2, cat3, finalScore };
+  return { assessment1, assessment2, finalExam, cat1, cat2, finalScore };
 };
 
 const TeacherDashboard = () => {
@@ -32,6 +31,7 @@ const TeacherDashboard = () => {
     addSchoolEntity,
     removeSchoolEntity,
     addStudentSubject,
+    updateStudentSubjectAssessments,
   } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("students");
@@ -187,16 +187,31 @@ const TeacherDashboard = () => {
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
-  const getSubjectScoreValue = (subject) => {
-    const rawValue = editedResults[subject.name];
-    if (rawValue !== undefined && rawValue !== "") {
-      return Number(rawValue) || 0;
-    }
-    return Number(subject.score ?? 0);
+  const getSubjectAssessments = (subject) =>
+    subject.assessments || buildAssessmentBreakdown(subject.score);
+
+  const handleResultScoreChange = (subjectName, assessmentName, value) => {
+    setEditedResults((prev) => ({
+      ...prev,
+      [subjectName]: {
+        ...(prev[subjectName] || {}),
+        [assessmentName]: value,
+      },
+    }));
   };
 
-  const handleResultScoreChange = (subjectName, value) => {
-    setEditedResults((prev) => ({ ...prev, [subjectName]: value }));
+  const handleResultsSave = async () => {
+    if (selectedStudent) {
+      for (const [subjectName, assessments] of Object.entries(editedResults)) {
+        await updateStudentSubjectAssessments(
+          selectedStudent.id,
+          subjectName,
+          assessments,
+        );
+      }
+    }
+    setEditedResults({});
+    setIsEditingResults(false);
   };
 
   const handleResultsCancel = () => {
@@ -645,7 +660,7 @@ const TeacherDashboard = () => {
                         <button
                           type="button"
                           className="action-btn primary"
-                          onClick={() => setIsEditingResults(false)}
+                          onClick={handleResultsSave}
                         >
                           Save
                         </button>
@@ -674,45 +689,60 @@ const TeacherDashboard = () => {
                     </thead>
                     <tbody>
                       {(selectedStudent.subjects || []).map((subject) => {
-                        const score = getSubjectScoreValue(subject);
-                        const breakdown = buildAssessmentBreakdown(score);
+                        const breakdown = getSubjectAssessments(subject);
+                        const edited = editedResults[subject.name] || {};
+                        const values = {
+                          ...breakdown,
+                          ...edited,
+                        };
 
                         return (
                           <tr key={subject.name}>
                             <td>{subject.name}</td>
+                            {[
+                              ["cat1", values.cat1],
+                              ["assessment1", values.assessment1],
+                              ["cat2", values.cat2],
+                              ["assessment2", values.assessment2],
+                              ["finalExam", values.finalExam],
+                            ].map(([assessmentName, value]) => (
+                              <td key={assessmentName}>
+                                {isEditingResults ? (
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={value}
+                                    onChange={(e) =>
+                                      handleResultScoreChange(
+                                        subject.name,
+                                        assessmentName,
+                                        e.target.value,
+                                      )
+                                    }
+                                    style={{
+                                      width: "70px",
+                                      padding: "6px 8px",
+                                      borderRadius: "4px",
+                                      border: "1px solid #d8dee7",
+                                    }}
+                                  />
+                                ) : (
+                                  value
+                                )}
+                              </td>
+                            ))}
                             <td>
-                              {isEditingResults ? (
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={
-                                    editedResults[subject.name] ??
-                                    Number(subject.score ?? 0)
-                                  }
-                                  onChange={(e) =>
-                                    handleResultScoreChange(
-                                      subject.name,
-                                      e.target.value,
-                                    )
-                                  }
-                                  style={{
-                                    width: "70px",
-                                    padding: "6px 8px",
-                                    borderRadius: "4px",
-                                    border: "1px solid #d8dee7",
-                                  }}
-                                />
-                              ) : (
-                                breakdown.cat1
-                              )}
-                            </td>
-                            <td>{breakdown.exam1}</td>
-                            <td>{breakdown.cat2}</td>
-                            <td>{breakdown.exam2}</td>
-                            <td>{breakdown.finalExam}</td>
-                            <td>
-                              <strong>{breakdown.finalScore.toFixed(1)}</strong>
+                              <strong>
+                                {(
+                                  (Number(values.cat1) +
+                                    Number(values.assessment1) +
+                                    Number(values.cat2) +
+                                    Number(values.assessment2) +
+                                    Number(values.finalExam)) /
+                                  5
+                                ).toFixed(1)}
+                              </strong>
                             </td>
                           </tr>
                         );
