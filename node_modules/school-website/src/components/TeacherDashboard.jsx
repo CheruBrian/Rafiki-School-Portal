@@ -219,6 +219,97 @@ const TeacherDashboard = () => {
     setIsEditingResults(false);
   };
 
+  const handleDownloadStudentReport = async () => {
+    if (!selectedStudent) return;
+
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
+    const average = averageOf(selectedStudent.subjects);
+    const report = new jsPDF({ orientation: "landscape", unit: "mm" });
+    const pageWidth = report.internal.pageSize.getWidth();
+    report.setFont("helvetica", "bold");
+    report.setFontSize(20);
+    report.setTextColor(32, 74, 61);
+    report.text("Student Results Report", 14, 18);
+
+    report.setFont("helvetica", "normal");
+    report.setFontSize(10);
+    report.setTextColor(75, 85, 99);
+    report.text(`Student: ${selectedStudent.name}`, 14, 30);
+    report.text(`Student ID: ${selectedStudent.id}`, 14, 37);
+    report.text(`Level: ${selectedStudent.category || "Preschool"}`, 95, 30);
+    report.text(`Class: ${selectedStudent.class || teacherClass}`, 95, 37);
+
+    report.setFont("helvetica", "bold");
+    report.setFontSize(12);
+    report.setTextColor(32, 74, 61);
+    report.text(`Overall Average: ${average.toFixed(1)}%`, 190, 30);
+    report.text(`Overall Grade: ${scoreToGrade(average)}`, 190, 37);
+
+    const tableRows = (selectedStudent.subjects || []).map((subject) => {
+      const assessments = getSubjectAssessments(subject);
+      const subjectAverage = (
+        [
+          assessments.cat1,
+          assessments.assessment1,
+          assessments.cat2,
+          assessments.assessment2,
+          assessments.finalExam,
+        ].reduce((total, score) => total + Number(score || 0), 0) / 5
+      ).toFixed(1);
+      return [
+        subject.name,
+        assessments.cat1,
+        assessments.assessment1,
+        assessments.cat2,
+        assessments.assessment2,
+        assessments.finalExam,
+        `${subjectAverage}%`,
+      ];
+    });
+
+    autoTable(report, {
+      startY: 48,
+      head: [
+        [
+          "Subject",
+          "C.A.T 1",
+          "Exam 1",
+          "C.A.T 2",
+          "Exam 2",
+          "Final Exam",
+          "Average Score",
+        ],
+      ],
+      body: tableRows.length
+        ? tableRows
+        : [["No subject results", "", "", "", "", "", ""]],
+      theme: "grid",
+      headStyles: { fillColor: [32, 74, 61], textColor: 255 },
+      alternateRowStyles: { fillColor: [242, 247, 244] },
+      styles: { font: "helvetica", fontSize: 10, cellPadding: 3.5 },
+      margin: { left: 14, right: 14 },
+    });
+
+    report.setFont("helvetica", "normal");
+    report.setFontSize(8);
+    report.setTextColor(107, 114, 128);
+    report.text(
+      `Generated ${new Date().toLocaleDateString()}`,
+      pageWidth - 14,
+      report.internal.pageSize.getHeight() - 8,
+      { align: "right" },
+    );
+
+    const safeName = selectedStudent.name
+      .trim()
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-|-$/g, "");
+    report.save(`student-results-${safeName || selectedStudent.id}.pdf`);
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -749,6 +840,16 @@ const TeacherDashboard = () => {
                     </tbody>
                   </table>
                 </div>
+                {!isEditingResults && (
+                  <button
+                    type="button"
+                    className="action-btn primary"
+                    onClick={handleDownloadStudentReport}
+                    style={{ marginTop: "16px" }}
+                  >
+                    Download PDF report
+                  </button>
+                )}
               </div>
             )}
           </div>
