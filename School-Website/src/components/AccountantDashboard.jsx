@@ -47,7 +47,6 @@ const AccountantDashboard = () => {
           <ProfileMenu
             userName={user?.name || "Accountant"}
             onLogout={handleLogout}
-            onEditProfile={() => {}}
           />
         </div>
       </header>

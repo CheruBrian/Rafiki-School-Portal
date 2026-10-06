@@ -10,6 +10,7 @@ import {
   addStudentSubject,
   updateStudentSubjectAssessments,
   verifyCredentials,
+  changeUserPassword,
 } from "./db.js";
 
 const { Pool } = pkg;
@@ -47,6 +48,16 @@ app.post("/api/auth/logout", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/auth/change-password", async (req, res) => {
+  try {
+    const { username, currentPassword, newPassword } = req.body;
+    await changeUserPassword(username, currentPassword, newPassword);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.get("/api/school-data", async (_req, res) => {
   try {
     const schoolData = await getSchoolData();
@@ -58,11 +69,12 @@ app.get("/api/school-data", async (_req, res) => {
 
 app.post("/api/school-data/:entityType", async (req, res) => {
   try {
-    const schoolData = await createSchoolEntity(
-      req.params.entityType,
-      req.body,
-    );
-    res.json({ ok: true, data: schoolData });
+    const result = await createSchoolEntity(req.params.entityType, req.body);
+    res.json({
+      ok: true,
+      data: result.schoolData,
+      credentials: result.credentials,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

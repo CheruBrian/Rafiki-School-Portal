@@ -297,7 +297,6 @@ const TeacherDashboard = () => {
           <ProfileMenu
             userName={user?.name || "Teacher"}
             onLogout={handleLogout}
-            onEditProfile={() => {}}
           />
         </div>
       </header>

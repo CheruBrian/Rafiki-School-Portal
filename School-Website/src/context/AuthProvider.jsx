@@ -261,6 +261,33 @@ export const AuthProvider = ({ children }) => {
         // sessionStorage may be unavailable (e.g. private browsing) - auth
         // still works for this tab, it just won't survive a refresh.
       }
+      return { success: true, user: result.user };
+    } catch {
+      return {
+        success: false,
+        error: "Unable to reach the server. Please try again.",
+      };
+    }
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: user?.username,
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result?.error || "Unable to change password.",
+        };
+      }
       return { success: true };
     } catch {
       return {
@@ -298,8 +325,9 @@ export const AuthProvider = ({ children }) => {
       if (result?.data) {
         setSchoolData(result.data);
       }
+      return { credentials: result?.credentials || null };
     } catch {
-      // keep the UI responsive even if the backend is temporarily unavailable
+      return { error: "Unable to save school data. Please try again." };
     }
   };
   const addStudentSubject = async (studentId, subject) => {
@@ -389,6 +417,7 @@ export const AuthProvider = ({ children }) => {
       user,
       isAuthenticated,
       login,
+      changePassword,
       logout,
       schoolData,
       addSchoolEntity,

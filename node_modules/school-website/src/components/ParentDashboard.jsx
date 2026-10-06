@@ -91,7 +91,6 @@ const ParentDashboard = () => {
           <ProfileMenu
             userName={user?.name || "Parent"}
             onLogout={handleLogout}
-            onEditProfile={() => {}}
           />
         </div>
       </header>

@@ -1,11 +1,12 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import { env } from "node:process";
 import sqlite3 from "sqlite3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dbPath = path.join(__dirname, "school.db");
+const dbPath = env.SCHOOL_DB_PATH || path.join(__dirname, "school.db");
 
 const sqlite = sqlite3.verbose();
 const db = new sqlite.Database(dbPath);
@@ -433,6 +434,27 @@ export const verifyCredentials = async (username, password) => {
   };
 };
 
+export const changeUserPassword = async (
+  username,
+  currentPassword,
+  newPassword,
+) => {
+  const user = await get("SELECT password_hash FROM users WHERE username = ?", [
+    username,
+  ]);
+  if (!user || !verifyPassword(currentPassword, user.password_hash)) {
+    throw new Error("Current password is incorrect.");
+  }
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    throw new Error("New password must be at least 8 characters.");
+  }
+
+  await run("UPDATE users SET password_hash = ? WHERE username = ?", [
+    hashPassword(newPassword),
+    username,
+  ]);
+};
+
 export const getSchoolData = async () => {
   const [students, teachers, accountants, financeTeam, directory] =
     await Promise.all([
@@ -573,6 +595,31 @@ export const createSchoolEntity = async (entityType, payload = {}) => {
   const values = await config.values();
   await run(config.sql, values);
 
+  let credentials = null;
+  if (entityType === "teachers" || entityType === "accountants") {
+    const role = entityType === "teachers" ? "teacher" : "accountant";
+    const usernameBase =
+      trimmedName
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ".")
+        .replace(/^\.|\.$/g, "") || role;
+    let username = usernameBase;
+    let suffix = 2;
+    while (await get("SELECT id FROM users WHERE username = ?", [username])) {
+      username = `${usernameBase}${suffix}`;
+      suffix += 1;
+    }
+
+    const password = crypto.randomBytes(9).toString("hex");
+    await run(
+      "INSERT INTO users (username, name, role, password_hash) VALUES (?, ?, ?, ?)",
+      [username, trimmedName, role, hashPassword(password)],
+    );
+    credentials = { username, password };
+  }
+
   await insertDirectoryEntry(entityType, {
     name: trimmedName,
     role:
@@ -592,7 +639,7 @@ export const createSchoolEntity = async (entityType, payload = {}) => {
           : "Preschool"),
   });
 
-  return getSchoolData();
+  return { schoolData: await getSchoolData(), credentials };
 };
 
 export const addStudentSubject = async (studentId, subject = {}) => {

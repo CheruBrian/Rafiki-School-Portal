@@ -24,6 +24,9 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [entityError, setEntityError] = useState("");
+  const [entitySubmitting, setEntitySubmitting] = useState(false);
   const [selectedTeacherCategory, setSelectedTeacherCategory] = useState("All");
   const [selectedStudentCategory, setSelectedStudentCategory] = useState("All");
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -113,6 +116,8 @@ const AdminDashboard = () => {
   };
 
   const handleToggleAddForm = () => {
+    setCreatedCredentials(null);
+    setEntityError("");
     if (showAddForm) {
       resetEntityForm();
     } else {
@@ -132,11 +137,20 @@ const AdminDashboard = () => {
     setShowAddForm(!showAddForm);
   };
 
-  const handleAddEntity = (event) => {
+  const handleAddEntity = async (event) => {
     event.preventDefault();
     if (!entityForm.name.trim()) return;
 
-    addSchoolEntity(activeTab, entityForm);
+    setEntitySubmitting(true);
+    setEntityError("");
+    const result = await addSchoolEntity(activeTab, entityForm);
+    setEntitySubmitting(false);
+    if (result?.error) {
+      setEntityError(result.error);
+      return;
+    }
+
+    setCreatedCredentials(result?.credentials || null);
     resetEntityForm();
     setShowAddForm(false);
   };
@@ -371,9 +385,14 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        <button type="submit" className="action-btn primary">
-          Add {entityLabel}
+        <button
+          type="submit"
+          className="action-btn primary"
+          disabled={entitySubmitting}
+        >
+          {entitySubmitting ? "Saving..." : `Add ${entityLabel}`}
         </button>
+        {entityError && <p className="error-message">{entityError}</p>}
       </form>
     );
   };
@@ -527,7 +546,6 @@ const AdminDashboard = () => {
           <ProfileMenu
             userName={user?.name || "Admin"}
             onLogout={handleLogout}
-            onEditProfile={() => {}}
           />
         </div>
       </header>
@@ -831,6 +849,17 @@ const AdminDashboard = () => {
               </div>
             </div>
             {showAddForm && renderAddForm()}
+            {createdCredentials && (
+              <div className="credentials-info" role="status">
+                <strong>Teacher account created</strong>
+                <p>Username: {createdCredentials.username}</p>
+                <p>Temporary password: {createdCredentials.password}</p>
+                <p>
+                  Share these details securely. The teacher can change the
+                  password after signing in.
+                </p>
+              </div>
+            )}
             {filteredTeachers.length === 0 ? (
               <p className="no-data">
                 No teachers available for this level. Use the Add Teacher button
@@ -931,6 +960,17 @@ const AdminDashboard = () => {
               </button>
             </div>
             {showAddForm && renderAddForm()}
+            {createdCredentials && (
+              <div className="credentials-info" role="status">
+                <strong>Accountant account created</strong>
+                <p>Username: {createdCredentials.username}</p>
+                <p>Temporary password: {createdCredentials.password}</p>
+                <p>
+                  Share these details securely. The accountant can change the
+                  password after signing in.
+                </p>
+              </div>
+            )}
             {accountants.length === 0 ? (
               <p className="no-data">
                 No accountants available. Use the Add Accountant button to

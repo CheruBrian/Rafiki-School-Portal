@@ -4,9 +4,9 @@ import { useAuth } from "../context/useAuth";
 import "./Login.css";
 
 const Login = () => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [userType, setUserType] = useState("admin");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
@@ -15,12 +15,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const result = await login(userType, password);
+    const result = await login(username, password);
     setSubmitting(false);
 
     if (result.success) {
-      // Redirect based on role
-      switch (userType) {
+      switch (result.user.role) {
         case "admin":
           navigate("/admin-dashboard");
           break;
@@ -45,26 +44,23 @@ const Login = () => {
     <div className="login-container">
       <div className="login-box">
         <h1>School Portal Login</h1>
-        <p className="subtitle">Select your role and login</p>
+        <p className="subtitle">Sign in to your school account</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="userType">User Type:</label>
-            <select
-              id="userType"
-              value={userType}
+            <label htmlFor="username">Username:</label>
+            <input
+              id="username"
+              value={username}
               onChange={(e) => {
-                setUserType(e.target.value);
-                setPassword("");
+                setUsername(e.target.value);
                 setError("");
               }}
+              placeholder="Enter username"
               className="form-control"
-            >
-              <option value="admin">Administrator</option>
-              <option value="accountant">Accountant</option>
-              <option value="teacher">Teacher</option>
-              <option value="parent">Parent</option>
-            </select>
+              autoComplete="username"
+              required
+            />
           </div>
 
           <div className="form-group">
@@ -80,6 +76,7 @@ const Login = () => {
                 }}
                 placeholder="Enter password"
                 className="form-control password-input"
+                autoComplete="current-password"
                 required
               />
               <button
@@ -114,15 +111,13 @@ const Login = () => {
 
           <div className="credentials-info">
             <p>
-              <strong>Demo Credentials:</strong>
+              <strong>Demo Accounts:</strong>
             </p>
             <ul>
-              <li>Admin: User Type: Administrator | Password: admin123</li>
-              <li>
-                Accountant: User Type: Accountant | Password: accountant123
-              </li>
-              <li>Teacher: User Type: Teacher | Password: teacher123</li>
-              <li>Parent: User Type: Parent | Password: parent123</li>
+              <li>Admin: admin / admin123</li>
+              <li>Accountant: accountant / accountant123</li>
+              <li>Teacher: teacher / teacher123</li>
+              <li>Parent: parent / parent123</li>
             </ul>
           </div>
         </form>
